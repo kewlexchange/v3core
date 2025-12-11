@@ -1,41 +1,33 @@
 package workers
 
-import "log"
+import "sync"
 
 type Worker struct {
-	ID         int
-	Queue      TaskQueue
-	WorkerPool chan TaskQueue
-	Quit       chan bool
+	id          int
+	WorkerPool  chan TaskQueue
+	TaskChannel TaskQueue
+	wg          *sync.WaitGroup
 }
 
-func NewWorker(id int, workerPool chan TaskQueue) *Worker {
-	return &Worker{
-		ID:         id,
-		Queue:      make(TaskQueue),
-		WorkerPool: workerPool,
-		Quit:       make(chan bool),
+func NewWorker(id int, workerPool chan TaskQueue, wg *sync.WaitGroup) Worker {
+	return Worker{
+		id:          id,
+		WorkerPool:  workerPool,
+		TaskChannel: make(TaskQueue),
+		wg:          wg,
 	}
 }
 
-func (w *Worker) Start() {
+func (w Worker) Start() {
 	go func() {
+		// Worker kendini havuza ekler
 		for {
-			w.WorkerPool <- w.Queue
+			w.WorkerPool <- w.TaskChannel
 
-			select {
-			case task := <-w.Queue:
-				task()
-			case <-w.Quit:
-				log.Printf("worker %d stopping", w.ID)
-				return
-			}
+			// Task gelince çalıştır
+			task := <-w.TaskChannel
+			task()
+			w.wg.Done()
 		}
-	}()
-}
-
-func (w *Worker) Stop() {
-	go func() {
-		w.Quit <- true
 	}()
 }

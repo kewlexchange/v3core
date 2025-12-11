@@ -1,9 +1,12 @@
 package workers
 
+import "sync"
+
 type Dispatcher struct {
 	WorkerPool chan TaskQueue
 	MaxWorkers int
 	TaskQueue  TaskQueue
+	wg         *sync.WaitGroup
 }
 
 func NewDispatcher(maxWorkers int, queueSize int) *Dispatcher {
@@ -11,12 +14,13 @@ func NewDispatcher(maxWorkers int, queueSize int) *Dispatcher {
 		WorkerPool: make(chan TaskQueue, maxWorkers),
 		MaxWorkers: maxWorkers,
 		TaskQueue:  make(TaskQueue, queueSize),
+		wg:         &sync.WaitGroup{},
 	}
 }
 
 func (d *Dispatcher) Run() {
 	for i := 0; i < d.MaxWorkers; i++ {
-		worker := NewWorker(i, d.WorkerPool)
+		worker := NewWorker(i, d.WorkerPool, d.wg)
 		worker.Start()
 	}
 
@@ -28,4 +32,8 @@ func (d *Dispatcher) dispatch() {
 		workerQueue := <-d.WorkerPool
 		workerQueue <- task
 	}
+}
+
+func (d *Dispatcher) Wait() {
+	d.wg.Wait()
 }

@@ -14,12 +14,14 @@ import (
 func main() {
 
 	pool := workers.NewWorkerPool(100)
+
+	// DEX fetcher
 	dexFetcher := &dexWorkers.DexV2Fetcher{}
-	cexFetcher := &cexWorkers.CexFetcher{}
-
 	dexService := services.NewPairService(pool, dexFetcher)
-	cexService := services.NewPairService(pool, cexFetcher)
 
+	_ = dexService // kullanıyorsan
+
+	// CEX exchanges
 	cexExchanges := []db.Exchange{
 		{Name: "Binance", Kind: db.ExchangeKindCEX},
 		{Name: "BtcTurk", Kind: db.ExchangeKindCEX},
@@ -27,17 +29,31 @@ func main() {
 	}
 
 	for _, ex := range cexExchanges {
-		if ex.Name == "BtcTurk" {
-			client := ccxt.NewBtcturk()
-			service := cexService.NewCexFetcher(client)
-			service.FetchPairsConcurrent([]db.Exchange{ex})
-		}
-		if ex.Name == "Binance" {
-			client := ccxt.NewBtcturk()
-			service := cex.NewCexFetcher(client)
-			service.FetchPairsConcurrent([]db.Exchange{ex})
-		}
 
+		switch ex.Name {
+
+		case "Binance":
+
+			client := ccxt.NewBinance(map[string]interface{}{
+				"enableRateLimit": true,
+			})
+			fetcher := cexWorkers.NewCexFetcher(client) // POINTER gerekmez
+			service := services.NewPairService(pool, fetcher)
+			service.FetchPairsConcurrent([]db.Exchange{ex})
+
+		case "BtcTurk":
+			client := ccxt.NewBtcturk(map[string]interface{}{
+				"enableRateLimit": true,
+			})
+
+			fetcher := cexWorkers.NewCexFetcher(client)
+			service := services.NewPairService(pool, fetcher)
+			service.FetchPairsConcurrent([]db.Exchange{ex})
+
+		case "Paribu":
+			println("[WARN] Paribu CCXT desteklemiyor, skip ediliyor.")
+			// TODO: ParibuFetcher ekle
+		}
 	}
-
+	pool.Wait()
 }

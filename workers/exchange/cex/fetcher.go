@@ -4,38 +4,40 @@ import (
 	"core/models/db"
 	"fmt"
 	"log"
-
-	ccxt "github.com/ccxt/ccxt/go/v4"
 )
 
 type CexFetcher struct {
-	client ccxt.IExchange
+	client any
+}
+
+func NewCexFetcher(client any) *CexFetcher {
+	return &CexFetcher{client: client}
 }
 
 func (c *CexFetcher) FetchPairs(exchange db.Exchange) ([]db.Pair, error) {
 	log.Printf("[CEX Fetcher] Fetching pairs from %s ...", exchange.Name)
 
-	// CCXT-Go async call
-	ch := c.client.LoadMarkets()
+	// CCXT-Go async LoadMarkets çağrısı
+	ex, ok := c.client.(interface {
+		LoadMarkets(...interface{}) <-chan interface{}
+	})
+	if !ok {
+		return nil, fmt.Errorf("client does not support LoadMarkets")
+	}
 
-	resp := <-ch // kanal cevabı
+	ch := ex.LoadMarkets()
+	resp := <-ch
+
+	// Gelen response doğrudan root-level market map
 	raw, ok := resp.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("invalid CCXT response")
+		return nil, fmt.Errorf("invalid CCXT response (not a map)")
 	}
 
-	// Debug istersen:
-	// pretty, _ := json.MarshalIndent(raw, "", "  ")
-	// fmt.Println(string(pretty))
+	pairs := []db.Pair{}
 
-	markets, ok := raw["markets"].(map[string]interface{})
-	if !ok {
-		return nil, fmt.Errorf("markets field missing in CCXT response")
-	}
-
-	pairs := make([]db.Pair, 0, len(markets))
-
-	for symbol, entry := range markets {
+	// ÖNEMLİ → raw doğrudan "symbol → market"
+	for symbol, entry := range raw {
 		market, ok := entry.(map[string]interface{})
 		if !ok {
 			continue
@@ -44,7 +46,13 @@ func (c *CexFetcher) FetchPairs(exchange db.Exchange) ([]db.Pair, error) {
 		base, _ := market["base"].(string)
 		quote, _ := market["quote"].(string)
 
-		// exchange’e tam uyumlu db.Pair struct
+		// Debug:
+		// fmt.Println("Market:", symbol, "Base:", base, "Quote:", quote)
+
+		if base == "" || quote == "" {
+			continue
+		}
+
 		pair := db.Pair{
 			ExchangeID: exchange.ID,
 			Symbol:     symbol,
@@ -52,10 +60,10 @@ func (c *CexFetcher) FetchPairs(exchange db.Exchange) ([]db.Pair, error) {
 			Quote:      quote,
 		}
 
+		fmt.Println("base", exchange.Name, base, quote)
 		pairs = append(pairs, pair)
 	}
 
-	log.Printf("[CEX] %s → %d pairs", exchange.Name, len(pairs))
-
+	log.Printf("[CEX] %s → %d pairs fetched", exchange.Name, len(pairs))
 	return pairs, nil
 }
