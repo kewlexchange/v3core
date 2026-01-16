@@ -1,7 +1,7 @@
 package exchange
 
-import "core/models/db"
+import "core/models"
 
 type PairFetcher interface {
-	FetchPairs(ex db.Exchange) ([]db.Pair, error)
+	FetchPairs(ex models.Exchange) ([]models.Pair, error)
 }

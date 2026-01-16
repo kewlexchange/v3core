@@ -2,6 +2,7 @@ package cex
 
 import (
 	"core/models/db"
+	"encoding/json"
 	"fmt"
 	"log"
 )
@@ -33,6 +34,10 @@ func (c *CexFetcher) FetchPairs(exchange db.Exchange) ([]db.Pair, error) {
 	if !ok {
 		return nil, fmt.Errorf("invalid CCXT response (not a map)")
 	}
+
+	// Debug istersen:
+	pretty, _ := json.MarshalIndent(raw, "", "  ")
+	fmt.Println(string(pretty))
 
 	pairs := []db.Pair{}
 

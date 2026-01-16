@@ -2,7 +2,7 @@ package repositories
 
 import (
 	"context"
-	"core/models/db"
+	"core/models"
 
 	"gorm.io/gorm"
 )
@@ -19,10 +19,10 @@ func NewExchangeRepository(db *gorm.DB) *ExchangeRepository {
 	return &ExchangeRepository{db: db}
 }
 
-func (r *ExchangeRepository) Create(context context.Context, exchangeInfo db.Exchange) error {
+func (r *ExchangeRepository) Create(context context.Context, exchangeInfo models.Exchange) error {
 	return nil
 }
 
-func (r *ExchangeRepository) UpsertPair(context context.Context, exchange db.Exchange) error {
+func (r *ExchangeRepository) UpsertPair(context context.Context, exchange models.Exchange) error {
 	return nil
 }
