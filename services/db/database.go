@@ -6,14 +6,13 @@ import (
 	"os"
 	"time"
 
+	"core/models"
 	seed "core/seeders"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-
-	db_models "core/models/db"
 )
 
 var DB *gorm.DB // Global değişken olarak veritabanı bağlantısı
@@ -63,9 +62,9 @@ func Migrate(db *gorm.DB) error {
 	db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`)
 
 	err := db.AutoMigrate(
-		&db_models.Currency{},
-		&db_models.Exchange{},
-		&db_models.Pair{},
+		&models.Currency{},
+		&models.Exchange{},
+		&models.Pair{},
 	)
 
 	return err
