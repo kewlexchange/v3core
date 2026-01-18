@@ -1,18 +1,21 @@
 package models
 
-import "github.com/google/uuid"
+import (
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/google/uuid"
+)
 
 type Currency struct {
-	ID       uuid.UUID `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"`
-	Symbol   string    `gorm:"type:text;not null"` // Global sembol (ETH, BTC, USDT)
-	Name     string    `gorm:"type:text"`
-	Decimals int32     `gorm:"type:int"`
-
-	Logo       *string `gorm:"type:text"`
-	Background *string `gorm:"type:text"`
-	Foreground *string `gorm:"type:text"`
-
-	IsEnabled bool `gorm:"default:true"`
+	ID         uuid.UUID       `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"`
+	Symbol     string          `gorm:"type:text;not null"` // Global sembol (ETH, BTC, USDT)
+	Name       string          `gorm:"type:text"  json:"-"`
+	Decimals   *string         `gorm:"type:text"  json:"-"`
+	Contract   *common.Address `gorm:"type:bytea"`
+	ChainID    *int64          `gorm:"type:bigint"`
+	Logo       *string         `gorm:"type:text"`
+	Background *string         `gorm:"type:text" json:"-"`
+	Foreground *string         `gorm:"type:text" json:"-"`
+	IsEnabled  bool            `gorm:"default:true"`
 }
 
 func (Currency) TableName() string {

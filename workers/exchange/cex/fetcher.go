@@ -1,7 +1,7 @@
 package cex
 
 import (
-	"core/models/db"
+	"core/models"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -15,7 +15,7 @@ func NewCexFetcher(client any) *CexFetcher {
 	return &CexFetcher{client: client}
 }
 
-func (c *CexFetcher) FetchPairs(exchange db.Exchange) ([]db.Pair, error) {
+func (c *CexFetcher) FetchPairs(exchange models.Exchange) ([]models.Pair, error) {
 	log.Printf("[CEX Fetcher] Fetching pairs from %s ...", exchange.Name)
 
 	// CCXT-Go async LoadMarkets çağrısı
@@ -39,7 +39,7 @@ func (c *CexFetcher) FetchPairs(exchange db.Exchange) ([]db.Pair, error) {
 	pretty, _ := json.MarshalIndent(raw, "", "  ")
 	fmt.Println(string(pretty))
 
-	pairs := []db.Pair{}
+	pairs := []models.Pair{}
 
 	// ÖNEMLİ → raw doğrudan "symbol → market"
 	for symbol, entry := range raw {
@@ -58,7 +58,7 @@ func (c *CexFetcher) FetchPairs(exchange db.Exchange) ([]db.Pair, error) {
 			continue
 		}
 
-		pair := db.Pair{
+		pair := models.Pair{
 			ExchangeID: exchange.ID,
 			Symbol:     symbol,
 			Base:       base,

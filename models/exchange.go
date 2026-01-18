@@ -50,6 +50,7 @@ type Exchange struct {
 	Factory     *common.Address `gorm:"type:bytea"`
 	NativeToken *common.Address `gorm:"type:bytea"`
 	Multicall3  *common.Address `gorm:"type:bytea"`
+	StablePair  *common.Address `gorm:"type:bytea"`
 
 	ChainID    *int64  `gorm:"type:bigint"`
 	Explorer   *string `gorm:"type:text"`

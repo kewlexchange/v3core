@@ -9,7 +9,7 @@ type Pair struct {
 	ID uuid.UUID `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"`
 
 	ExchangeID uuid.UUID `gorm:"type:uuid;not null"`
-	Exchange   Exchange  `gorm:"foreignKey:ExchangeID"`
+	Exchange   Exchange  `gorm:"foreignKey:ExchangeID", json:"-"`
 
 	BaseCurrencyID uuid.UUID `gorm:"type:uuid;not null"`
 	BaseCurrency   Currency  `gorm:"foreignKey:BaseCurrencyID"`
@@ -21,8 +21,20 @@ type Pair struct {
 	Base  string `gorm:"type:text"`
 	Quote string `gorm:"type:text"`
 
-	BasePrice  *decimal.Decimal `gorm:"type:numeric"`
+	// BASE ASSETIN QUOTEy ye gore FIYATI
+	BasePrice *decimal.Decimal `gorm:"type:numeric"`
+	// QUOTE ASSETIN BASEYE GORE FIYATI
 	QuotePrice *decimal.Decimal `gorm:"type:numeric"`
+
+	// BASE ASSET'in USD TURUNDEN FIYATI
+	BasePriceUSD *decimal.Decimal `gorm:"type:numeric"`
+	// QUOTE ASSET'in USD TURUNDEN FIYATI
+	QuotePriceUSD *decimal.Decimal `gorm:"type:numeric"`
+
+	//BASE ASSETIN CHZ TURUNDEN  FIYATI
+	BasePriceNative *decimal.Decimal `gorm:"type:numeric"`
+	// QUOTE ASSETIN CHZ TURUNDEN FIYATI
+	QuotePriceNative *decimal.Decimal `gorm:"type:numeric"`
 
 	BaseReserve  *string `gorm:"type:text"`
 	QuoteReserve *string `gorm:"type:text"`

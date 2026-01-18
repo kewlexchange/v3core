@@ -54,6 +54,10 @@ func DecimalToBigInt(d *decimal.Decimal) *big.Int {
 	return d.BigInt()
 }
 
+func DecimalPtr(d decimal.Decimal) *decimal.Decimal {
+	return &d
+}
+
 func ParseUnits(amount string, decimals *big.Int) (*big.Int, error) {
 	f, ok := new(big.Float).SetString(amount)
 	if !ok {

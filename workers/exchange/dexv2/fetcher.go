@@ -18,6 +18,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/shopspring/decimal"
 )
 
 type DexV2Fetcher struct{}
@@ -111,6 +112,42 @@ func (d *DexV2Fetcher) FetchPairs(ex models.Exchange) ([]models.Pair, error) {
 	return pairs, err
 }
 
+func (d *DexV2Fetcher) CalculatePrices(reserveBase, reserveQuote, decimalsBase, decimalsQuote *big.Int) (priceBase, priceQuote decimal.Decimal, err error) {
+	decimalsBaseInt64 := decimalsBase.Int64()
+	decimalsQuoteInt64 := decimalsQuote.Int64()
+
+	baseDivisor := new(big.Float).SetInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(decimalsBaseInt64), nil))
+	quoteDivisor := new(big.Float).SetInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(decimalsQuoteInt64), nil))
+
+	fReserveBase := new(big.Float).Quo(new(big.Float).SetInt(reserveBase), baseDivisor)
+	fReserveQuote := new(big.Float).Quo(new(big.Float).SetInt(reserveQuote), quoteDivisor)
+
+	zero := big.NewFloat(0)
+
+	if fReserveBase.Cmp(zero) == 0 || fReserveQuote.Cmp(zero) == 0 {
+		return decimal.Zero, decimal.Zero, fmt.Errorf("reserve base veya quote sıfır")
+	}
+
+	priceBaseFloat := new(big.Float).Quo(fReserveQuote, fReserveBase)
+	priceQuoteFloat := new(big.Float).Quo(fReserveBase, fReserveQuote)
+
+	// big.Float → string
+	priceBaseStr := priceBaseFloat.Text('f', 18) // 18 ondalık hassasiyet
+	priceQuoteStr := priceQuoteFloat.Text('f', 18)
+
+	// string → decimal.Decimal
+	priceBase, err = decimal.NewFromString(priceBaseStr)
+	if err != nil {
+		return decimal.Zero, decimal.Zero, err
+	}
+	priceQuote, err = decimal.NewFromString(priceQuoteStr)
+	if err != nil {
+		return decimal.Zero, decimal.Zero, err
+	}
+
+	return priceBase, priceQuote, nil
+}
+
 func (d *DexV2Fetcher) FetchReserves(pairs []models.Pair) ([]models.Pair, error) {
 
 	kewlInfo, _ := constants.GetExchangeByName("KEWL")
@@ -147,6 +184,20 @@ func (d *DexV2Fetcher) FetchReserves(pairs []models.Pair) ([]models.Pair, error)
 			pairs[i].BaseDecimals = utils.BigIntToStringPtr(pair.Token0Decimals)
 			pairs[i].QuoteDecimals = utils.BigIntToStringPtr(pair.Token1Decimals)
 
+			pairs[i].BaseCurrency.Contract = &pair.Token0
+			pairs[i].BaseCurrency.Decimals = utils.BigIntToStringPtr(pair.Token0Decimals)
+
+			pairs[i].QuoteCurrency.Contract = &pair.Token1
+			pairs[i].QuoteCurrency.Decimals = utils.BigIntToStringPtr(pair.Token1Decimals)
+
+			var priceBase decimal.Decimal
+			var priceQuote decimal.Decimal
+			priceBase, priceQuote, err = d.CalculatePrices(pair.Reserve0, pair.Reserve1, pair.Token0Decimals, pair.Token1Decimals)
+
+			pairs[i].BasePrice = &priceBase
+			pairs[i].QuotePrice = &priceQuote
+
+			pairs[i].QuoteDecimals = utils.BigIntToStringPtr(pair.Token1Decimals)
 			isEnabled := pair.Reserve0.Cmp(minLiquidity) >= 0 && pair.Reserve1.Cmp(minLiquidity) >= 0
 			pairs[i].IsEnabled = isEnabled
 		}

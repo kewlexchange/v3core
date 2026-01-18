@@ -18,6 +18,7 @@ var DEXExchanges = []models.Exchange{
 		Factory:     utils.AddressFromHex("0xE2918AA38088878546c1A18F2F9b1BC83297fdD3"),
 		NativeToken: utils.AddressFromHex("0x677F7e16C7Dd57be1D4C8aD1244883214953DC47"),
 		Multicall3:  utils.AddressFromHex("0xcA11bde05977b3631167028862bE2a173976CA11"),
+		StablePair:  utils.AddressFromHex("0xff6d22b9bd32afb60ac717248c77be1ea16107a5"),
 		ChainID:     &chilizChainId,
 		RPC:         &chilizChain.RPC,
 	},
@@ -29,8 +30,10 @@ var DEXExchanges = []models.Exchange{
 		Factory:     utils.AddressFromHex("0xA0BB8f9865f732C277d0C162249A4F6c157ae9D0"),
 		NativeToken: utils.AddressFromHex("0x677F7e16C7Dd57be1D4C8aD1244883214953DC47"),
 		Multicall3:  utils.AddressFromHex("0xcA11bde05977b3631167028862bE2a173976CA11"),
-		ChainID:     &chilizChainId,
-		RPC:         &chilizChain.RPC,
+		StablePair:  utils.AddressFromHex("0xff6d22b9bd32afb60ac717248c77be1ea16107a5"),
+
+		ChainID: &chilizChainId,
+		RPC:     &chilizChain.RPC,
 	},
 	{
 		Name:        "DIVISWAP",
@@ -40,8 +43,10 @@ var DEXExchanges = []models.Exchange{
 		Factory:     utils.AddressFromHex("0xbdd9c322ecf401e09c9d2dca3be46a7e45d48bb1"),
 		NativeToken: utils.AddressFromHex("0x677F7e16C7Dd57be1D4C8aD1244883214953DC47"),
 		Multicall3:  utils.AddressFromHex("0xcA11bde05977b3631167028862bE2a173976CA11"),
-		ChainID:     &chilizChainId,
-		RPC:         &chilizChain.RPC,
+		StablePair:  utils.AddressFromHex("0xff6d22b9bd32afb60ac717248c77be1ea16107a5"),
+
+		ChainID: &chilizChainId,
+		RPC:     &chilizChain.RPC,
 	},
 }
 
