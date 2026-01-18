@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"core/constants"
+	"core/models"
 	"errors"
 	"fmt"
 	"os"
@@ -42,7 +43,7 @@ func IsValidJWTFormat(token string) bool {
 	return jwtRegex.MatchString(token)
 }
 
-func DecodeUserJWT(tokenString string) (*jwtclaims.UserJWTClaims, error) {
+func DecodeUserJWT(tokenString string) (*models.UserJWTClaims, error) {
 	if len(tokenString) > 1024 {
 		return nil, errors.New("token too long")
 	}
@@ -55,7 +56,7 @@ func DecodeUserJWT(tokenString string) (*jwtclaims.UserJWTClaims, error) {
 		return nil, errors.New("invalid token format")
 	}
 
-	token, err := jwt.ParseWithClaims(tokenString, &jwtclaims.UserJWTClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &models.UserJWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("unexpected signing method")
 		}
@@ -69,7 +70,7 @@ func DecodeUserJWT(tokenString string) (*jwtclaims.UserJWTClaims, error) {
 		fmt.Println("DecodeUserJWT:Error:2")
 		return nil, errors.New("invalid jwt token")
 	}
-	claims, ok := token.Claims.(*jwtclaims.UserJWTClaims)
+	claims, ok := token.Claims.(*models.UserJWTClaims)
 	if !ok || !token.Valid {
 		return nil, errors.New("invalid token or claims")
 	}
