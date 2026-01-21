@@ -6,15 +6,15 @@ import (
 )
 
 type Pair struct {
-	ID uuid.UUID `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"`
+	ID uuid.UUID `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"  json:"-"`
 
-	ExchangeID uuid.UUID `gorm:"type:uuid;not null"`
-	Exchange   Exchange  `gorm:"foreignKey:ExchangeID", json:"-"`
+	ExchangeID uuid.UUID `gorm:"type:uuid;not null"  json:"-"`
+	Exchange   Exchange  `gorm:"foreignKey:ExchangeID" json:"-"`
 
-	BaseCurrencyID uuid.UUID `gorm:"type:uuid;not null"`
+	BaseCurrencyID uuid.UUID `gorm:"type:uuid;not null"  json:"-"`
 	BaseCurrency   Currency  `gorm:"foreignKey:BaseCurrencyID"`
 
-	QuoteCurrencyID uuid.UUID `gorm:"type:uuid;not null"`
+	QuoteCurrencyID uuid.UUID `gorm:"type:uuid;not null"  json:"-"`
 	QuoteCurrency   Currency  `gorm:"foreignKey:QuoteCurrencyID"`
 
 	Pair  string `gorm:"type:text"`
