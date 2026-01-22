@@ -8,10 +8,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/big"
 	"os"
 	"path/filepath"
 	"sync"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/shopspring/decimal"
 )
 
@@ -53,8 +55,7 @@ func (s *PairService) SaveJSONToFile(outputDir, prefix string, data interface{})
 		return "", fmt.Errorf("mkdir error: %w", err)
 	}
 
-	// Dosya adı oluştur (ör: output/prefix-<timestamp>.json)
-	filename := filepath.Join(outputDir, fmt.Sprintf("%s-%s.json", prefix, "-"))
+	filename := filepath.Join(outputDir, fmt.Sprintf("%s-%s.json", prefix, ""))
 
 	// Dosyaya yaz
 	if err := os.WriteFile(filename, jsonData, 0644); err != nil {
@@ -62,6 +63,36 @@ func (s *PairService) SaveJSONToFile(outputDir, prefix string, data interface{})
 	}
 
 	return filename, nil
+}
+
+func (s *PairService) CheckPairExists(assets []models.Asset, currency models.Currency, stableOrNativeToken string) *models.Pair {
+
+	token := currency.Contract.Hex()
+
+	var bestPair *models.Pair
+	var bestLiquidity *big.Int
+	for _, asset := range assets {
+		if asset.Currency.Contract.Hex() == currency.Contract.Hex() {
+
+			for _, pair := range asset.TradingPairs {
+
+				if (pair.Base == stableOrNativeToken && pair.Quote == token) ||
+					(pair.Base == token && pair.Quote == stableOrNativeToken) {
+
+					currentLiquidity := new(big.Int).Mul(pair.BaseReserve, pair.QuoteReserve)
+
+					if bestPair == nil {
+						bestPair = &pair
+						bestLiquidity = currentLiquidity
+					} else if currentLiquidity.Cmp(bestLiquidity) > 0 {
+						bestPair = &pair
+						bestLiquidity = currentLiquidity
+					}
+				}
+			}
+		}
+	}
+	return bestPair
 }
 
 func (s *PairService) ParseTokens(pairs []models.Pair) ([]models.Pair, []models.Asset, error) {
@@ -78,20 +109,20 @@ func (s *PairService) ParseTokens(pairs []models.Pair) ([]models.Pair, []models.
 		}
 	}
 
-	usdAddress := ""
-	nativeAddress := ""
+	usdAddress := common.Address{}
+	nativeAddress := common.Address{}
 
 	if stablePair.Base == stablePair.Exchange.NativeToken.Hex() {
-		usdAddress = stablePair.Quote
-		nativeAddress = stablePair.Base
+		usdAddress = *utils.AddressFromHex(stablePair.Quote)
+		nativeAddress = *utils.AddressFromHex(stablePair.Base)
 	} else {
-		usdAddress = stablePair.Base
-		nativeAddress = stablePair.Quote
+		usdAddress = *utils.AddressFromHex(stablePair.Base)
+		nativeAddress = *utils.AddressFromHex(stablePair.Quote)
 	}
 
 	one := decimal.NewFromInt(1)
 
-	if stablePair.Base == nativeAddress {
+	if stablePair.Base == nativeAddress.Hex() {
 		// NATIVE / USD
 		stablePair.BasePriceNative = &one
 		stablePair.QuotePriceUSD = &one
@@ -99,7 +130,7 @@ func (s *PairService) ParseTokens(pairs []models.Pair) ([]models.Pair, []models.
 		stablePair.BasePriceUSD = stablePair.BasePrice
 		inv := one.Div(*stablePair.BasePrice)
 		stablePair.QuotePriceNative = &inv
-	} else if stablePair.Base == usdAddress {
+	} else if stablePair.Base == usdAddress.Hex() {
 		// USD / NATIVE
 		stablePair.QuotePriceNative = &one
 		stablePair.BasePriceUSD = &one
@@ -110,6 +141,7 @@ func (s *PairService) ParseTokens(pairs []models.Pair) ([]models.Pair, []models.
 	}
 
 	assetList := []models.Asset{}
+	unknownPairs := []models.Pair{}
 
 	addPairToAsset(&assetList, stablePair.BaseCurrency, &stablePair)
 	addPairToAsset(&assetList, stablePair.QuoteCurrency, &stablePair)
@@ -119,15 +151,19 @@ func (s *PairService) ParseTokens(pairs []models.Pair) ([]models.Pair, []models.
 			continue
 		}
 
-		isBaseNative := pair.Base == nativeAddress || pair.Base == "0x721EF6871f1c4Efe730Dce047D40D1743B886946"
-		isQuoteNative := pair.Quote == nativeAddress || pair.Quote == "0x721EF6871f1c4Efe730Dce047D40D1743B886946"
+		if !pair.IsEnabled {
+			continue
+		}
+
+		isBaseNative := pair.Base == nativeAddress.Hex() || pair.Base == "0x721EF6871f1c4Efe730Dce047D40D1743B886946"
+		isQuoteNative := pair.Quote == nativeAddress.Hex() || pair.Quote == "0x721EF6871f1c4Efe730Dce047D40D1743B886946"
 		isBaseStable := pair.Base == stablePair.Base
 		isQuoteStable := pair.Quote == stablePair.Quote
 
 		// 1 CHZ = X USD
 		var chzUSD decimal.Decimal
 
-		if stablePair.Base == nativeAddress {
+		if stablePair.Base == nativeAddress.Hex() {
 			// CHZ / USD
 			chzUSD = *stablePair.BasePrice
 		} else {
@@ -180,7 +216,7 @@ func (s *PairService) ParseTokens(pairs []models.Pair) ([]models.Pair, []models.
 			}
 
 		} else {
-			fmt.Println("Diffrent", pair.Pair)
+			unknownPairs = append(unknownPairs, pair)
 		}
 
 	}
@@ -190,9 +226,22 @@ func (s *PairService) ParseTokens(pairs []models.Pair) ([]models.Pair, []models.
 		if !p.IsEnabled || p.Pair == stablePair.Pair {
 			continue
 		}
-
 		addPairToAsset(&assetList, p.BaseCurrency, p)
 		addPairToAsset(&assetList, p.QuoteCurrency, p)
+	}
+
+	for i := range unknownPairs {
+		//p := &unknownPairs[i]
+		//s.FindPair
+
+		fmt.Println("UNK PAIRS", i)
+
+		nativeBasePairExists := s.CheckPairExists(assetList, unknownPairs[i].BaseCurrency, nativeAddress.Hex())
+		stableBasePairExists := s.CheckPairExists(assetList, unknownPairs[i].BaseCurrency, stablePairAddress.Hex())
+
+		nativeQuotePairExists := s.CheckPairExists(assetList, unknownPairs[i].QuoteCurrency, nativeAddress.Hex())
+		stableQuotePairExists := s.CheckPairExists(assetList, unknownPairs[i].QuoteCurrency, stablePairAddress.Hex())
+
 	}
 
 	return pairs, assetList, nil

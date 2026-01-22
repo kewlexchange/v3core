@@ -179,8 +179,11 @@ func (d *DexV2Fetcher) FetchReserves(pairs []models.Pair) ([]models.Pair, error)
 		if pairAddress.Hex() == pair.Pair.Hex() {
 			pairs[i].Base = pair.Token0.Hex()
 			pairs[i].Quote = pair.Token1.Hex()
-			pairs[i].BaseReserve = utils.StringPtr(utils.FormatUnits(pair.Reserve0, pair.Token0Decimals))
-			pairs[i].QuoteReserve = utils.StringPtr(utils.FormatUnits(pair.Reserve1, pair.Token1Decimals))
+			pairs[i].BaseReserve = pair.Reserve0
+			pairs[i].QuoteReserve = pair.Reserve1
+
+			pairs[i].BaseReserveStr = utils.StringPtr(utils.FormatUnits(pair.Reserve0, pair.Token0Decimals))
+			pairs[i].QuoteReserveStr = utils.StringPtr(utils.FormatUnits(pair.Reserve1, pair.Token1Decimals))
 			pairs[i].BaseDecimals = utils.BigIntToStringPtr(pair.Token0Decimals)
 			pairs[i].QuoteDecimals = utils.BigIntToStringPtr(pair.Token1Decimals)
 

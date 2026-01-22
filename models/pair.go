@@ -1,6 +1,8 @@
 package models
 
 import (
+	"math/big"
+
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 )
@@ -36,8 +38,11 @@ type Pair struct {
 	// QUOTE ASSETIN CHZ TURUNDEN FIYATI
 	QuotePriceNative *decimal.Decimal `gorm:"type:numeric"`
 
-	BaseReserve  *string `gorm:"type:text"`
-	QuoteReserve *string `gorm:"type:text"`
+	BaseReserve  *big.Int
+	QuoteReserve *big.Int
+
+	BaseReserveStr  *string `gorm:"type:text"`
+	QuoteReserveStr *string `gorm:"type:text"`
 
 	BaseDecimals  *string `gorm:"type:text"`
 	QuoteDecimals *string `gorm:"type:text"`

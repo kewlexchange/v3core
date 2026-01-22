@@ -17,8 +17,6 @@ func main() {
 	dexFetcher := &dexWorkers.DexV2Fetcher{}
 	dexService := services.NewPairService(pool, dexFetcher)
 
-	_ = dexService // kullanıyorsan
-
 	// DEX exchanges
 
 	for _, dex := range constants.DEXExchanges {
