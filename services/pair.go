@@ -37,9 +37,9 @@ func addPairToAsset(assetList *[]models.Asset, currency models.Currency, p *mode
 		}
 	}
 	*assetList = append(*assetList, models.Asset{
-		Test:         currency.Contract.Hex(),
-		Currency:     currency,
-		TradingPairs: []models.Pair{*p},
+		ContractAddress: currency.Contract.Hex(),
+		Currency:        currency,
+		TradingPairs:    []models.Pair{*p},
 	})
 }
 
@@ -55,7 +55,7 @@ func (s *PairService) SaveJSONToFile(outputDir, prefix string, data interface{})
 		return "", fmt.Errorf("mkdir error: %w", err)
 	}
 
-	filename := filepath.Join(outputDir, fmt.Sprintf("%s-%s.json", prefix, ""))
+	filename := filepath.Join(outputDir, fmt.Sprintf("%s-%s.json", prefix, "data"))
 
 	// Dosyaya yaz
 	if err := os.WriteFile(filename, jsonData, 0644); err != nil {
@@ -65,7 +65,27 @@ func (s *PairService) SaveJSONToFile(outputDir, prefix string, data interface{})
 	return filename, nil
 }
 
-func (s *PairService) CheckPairExists(assets []models.Asset, currency models.Currency, stableOrNativeToken string) *models.Pair {
+func (s *PairService) PriceNativeOf(asset common.Address, p *models.Pair) *decimal.Decimal {
+	if p.Base == asset.Hex() {
+		return p.BasePriceNative
+	}
+	if p.Quote == asset.Hex() {
+		return p.QuotePriceNative
+	}
+	return nil
+}
+
+func (s *PairService) PriceUSDOf(asset common.Address, p *models.Pair) *decimal.Decimal {
+	if p.Base == asset.Hex() {
+		return p.BasePriceUSD
+	}
+	if p.Quote == asset.Hex() {
+		return p.QuotePriceUSD
+	}
+	return nil
+}
+
+func (s *PairService) FindPair(assets []models.Asset, currency models.Currency, stableOrNativeToken string) *models.Pair {
 
 	token := currency.Contract.Hex()
 
@@ -95,9 +115,9 @@ func (s *PairService) CheckPairExists(assets []models.Asset, currency models.Cur
 	return bestPair
 }
 
-func (s *PairService) ParseTokens(pairs []models.Pair) ([]models.Pair, []models.Asset, error) {
+func (s *PairService) ParseTokens(pairs []models.Pair) ([]models.Pair, []models.Asset, models.Pair, error) {
 	if len(pairs) == 0 {
-		return pairs, []models.Asset{}, nil
+		return pairs, []models.Asset{}, models.Pair{}, nil
 	}
 
 	stablePairAddress := pairs[0].Exchange.StablePair
@@ -215,36 +235,105 @@ func (s *PairService) ParseTokens(pairs []models.Pair) ([]models.Pair, []models.
 				pairs[id].BasePriceNative = &v
 			}
 
+			addPairToAsset(&assetList, pairs[id].BaseCurrency, &pairs[id])
+			addPairToAsset(&assetList, pairs[id].QuoteCurrency, &pairs[id])
+
 		} else {
 			unknownPairs = append(unknownPairs, pair)
 		}
-
-	}
-
-	for i := range pairs {
-		p := &pairs[i]
-		if !p.IsEnabled || p.Pair == stablePair.Pair {
-			continue
-		}
-		addPairToAsset(&assetList, p.BaseCurrency, p)
-		addPairToAsset(&assetList, p.QuoteCurrency, p)
 	}
 
 	for i := range unknownPairs {
-		//p := &unknownPairs[i]
-		//s.FindPair
+		p := &unknownPairs[i]
 
-		fmt.Println("UNK PAIRS", i)
+		baseNativePair := s.FindPair(assetList, p.BaseCurrency, nativeAddress.Hex())
+		quoteNativePair := s.FindPair(assetList, p.QuoteCurrency, nativeAddress.Hex())
 
-		nativeBasePairExists := s.CheckPairExists(assetList, unknownPairs[i].BaseCurrency, nativeAddress.Hex())
-		stableBasePairExists := s.CheckPairExists(assetList, unknownPairs[i].BaseCurrency, stablePairAddress.Hex())
+		if baseNativePair != nil && quoteNativePair != nil {
+			baseNative := s.PriceNativeOf(*p.BaseCurrency.Contract, baseNativePair)
+			quoteNative := s.PriceNativeOf(*p.QuoteCurrency.Contract, quoteNativePair)
 
-		nativeQuotePairExists := s.CheckPairExists(assetList, unknownPairs[i].QuoteCurrency, nativeAddress.Hex())
-		stableQuotePairExists := s.CheckPairExists(assetList, unknownPairs[i].QuoteCurrency, stablePairAddress.Hex())
+			if baseNative != nil && quoteNative != nil {
+				price := baseNative.Div(*quoteNative)
+				p.BasePrice = &price
+				inv := decimal.NewFromInt(1).Div(price)
+				p.QuotePrice = &inv
+
+				p.BasePriceNative = baseNative
+				p.QuotePriceNative = quoteNative
+
+				baseUSD := s.PriceUSDOf(*p.BaseCurrency.Contract, baseNativePair)
+				quoteUSD := s.PriceUSDOf(*p.QuoteCurrency.Contract, quoteNativePair)
+				if baseUSD != nil && quoteUSD != nil {
+					p.BasePriceUSD = baseUSD
+					p.QuotePriceUSD = quoteUSD
+				}
+
+				addPairToAsset(&assetList, p.BaseCurrency, p)
+				addPairToAsset(&assetList, p.QuoteCurrency, p)
+				continue
+			}
+		}
+
+		baseUSDPair := s.FindPair(assetList, p.BaseCurrency, stablePairAddress.Hex())
+		quoteUSDPair := s.FindPair(assetList, p.QuoteCurrency, stablePairAddress.Hex())
+
+		if baseUSDPair != nil && quoteUSDPair != nil {
+			baseUSD := s.PriceUSDOf(*p.BaseCurrency.Contract, baseUSDPair)
+			quoteUSD := s.PriceUSDOf(*p.QuoteCurrency.Contract, quoteUSDPair)
+
+			if baseUSD != nil && quoteUSD != nil {
+				price := baseUSD.Div(*quoteUSD)
+				p.BasePrice = &price
+				inv := decimal.NewFromInt(1).Div(price)
+				p.QuotePrice = &inv
+
+				p.BasePriceUSD = baseUSD
+				p.QuotePriceUSD = quoteUSD
+
+				baseNative := s.PriceNativeOf(*p.BaseCurrency.Contract, baseUSDPair)
+				quoteNative := s.PriceNativeOf(*p.QuoteCurrency.Contract, quoteUSDPair)
+				if baseNative != nil && quoteNative != nil {
+					p.BasePriceNative = baseNative
+					p.QuotePriceNative = quoteNative
+				}
+
+				addPairToAsset(&assetList, p.BaseCurrency, p)
+				addPairToAsset(&assetList, p.QuoteCurrency, p)
+				continue
+			}
+		}
 
 	}
 
-	return pairs, assetList, nil
+	return pairs, assetList, stablePair, nil
+}
+
+func (s *PairService) CustomPairs(assets []models.Asset, baseToken *common.Address, quoteToken *common.Address) []models.Pair {
+
+	uniq := make(map[string]models.Pair)
+
+	for _, asset := range assets {
+		addr := asset.Currency.Contract.Hex()
+		if addr != baseToken.Hex() && addr != quoteToken.Hex() {
+			continue
+		}
+
+		for _, pair := range asset.TradingPairs {
+			if (pair.Base == baseToken.Hex() && pair.Quote == quoteToken.Hex()) ||
+				(pair.Quote == baseToken.Hex() && pair.Base == quoteToken.Hex()) {
+
+				uniq[pair.Pair] = pair
+			}
+		}
+	}
+
+	out := make([]models.Pair, 0, len(uniq))
+	for _, p := range uniq {
+		out = append(out, p)
+	}
+
+	return out
 }
 
 func (s *PairService) FetchPairsConcurrent(exchanges []models.Exchange) {
@@ -273,8 +362,10 @@ func (s *PairService) FetchPairsConcurrent(exchanges []models.Exchange) {
 
 	wg.Wait() // tüm fetch işlemleri bitene kadar bekle
 
-	pairs, assets, _ := s.ParseTokens(allPairs)
+	pairs, assets, _, _ := s.ParseTokens(allPairs)
+	customs := s.CustomPairs(assets, utils.AddressFromHex("0x60f397acbcfb8f4e3234c659a3e10867e6fa6b67"), utils.AddressFromHex("0x677f7e16c7dd57be1d4c8ad1244883214953dc47"))
 	// Şimdi tüm pairs tek dosyaya yaz
+	s.SaveJSONToFile("output", "customs", customs)
 	s.SaveJSONToFile("output", "all_assets", assets)
 	s.SaveJSONToFile("output", "all_exchanges", pairs)
 
