@@ -5,6 +5,7 @@ import (
 	"core/utils"
 	"core/workers"
 	exchange "core/workers/exchange"
+	"core/workers/exchange/dexv2/arbitrage"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -309,9 +310,13 @@ func (s *PairService) ParseTokens(pairs []models.Pair) ([]models.Pair, []models.
 	return pairs, assetList, stablePair, nil
 }
 
-func (s *PairService) CustomPairs(assets []models.Asset, baseToken *common.Address, quoteToken *common.Address) []models.Pair {
+func (s *PairService) CustomPairs(
+	assets []models.Asset,
+	baseToken *common.Address,
+	quoteToken *common.Address,
+) []*models.Pair {
 
-	uniq := make(map[string]models.Pair)
+	uniq := make(map[string]*models.Pair)
 
 	for _, asset := range assets {
 		addr := asset.Currency.Contract.Hex()
@@ -320,20 +325,26 @@ func (s *PairService) CustomPairs(assets []models.Asset, baseToken *common.Addre
 		}
 
 		for _, pair := range asset.TradingPairs {
+
 			if (pair.Base == baseToken.Hex() && pair.Quote == quoteToken.Hex()) ||
 				(pair.Quote == baseToken.Hex() && pair.Base == quoteToken.Hex()) {
-
-				uniq[pair.Pair] = pair
+				p := pair
+				uniq[p.Pair] = &p
 			}
 		}
 	}
 
-	out := make([]models.Pair, 0, len(uniq))
+	out := make([]*models.Pair, 0, len(uniq))
 	for _, p := range uniq {
 		out = append(out, p)
 	}
 
 	return out
+}
+
+func (s *PairService) Arbitrage(pairs []*models.Pair) {
+	arbitrage.TestFunctions()
+	arbitrage.FindArbitrage(pairs)
 }
 
 func (s *PairService) FetchPairsConcurrent(exchanges []models.Exchange) {
@@ -365,7 +376,11 @@ func (s *PairService) FetchPairsConcurrent(exchanges []models.Exchange) {
 	pairs, assets, _, _ := s.ParseTokens(allPairs)
 	customs := s.CustomPairs(assets, utils.AddressFromHex("0x60f397acbcfb8f4e3234c659a3e10867e6fa6b67"), utils.AddressFromHex("0x677f7e16c7dd57be1d4c8ad1244883214953dc47"))
 	// Şimdi tüm pairs tek dosyaya yaz
+
+	s.Arbitrage(customs)
+
 	s.SaveJSONToFile("output", "customs", customs)
+
 	s.SaveJSONToFile("output", "all_assets", assets)
 	s.SaveJSONToFile("output", "all_exchanges", pairs)
 
