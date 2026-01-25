@@ -2,14 +2,17 @@ package main
 
 import (
 	"core/constants"
+	"core/models"
 	"core/services"
 	"core/workers"
-	"fmt"
-
 	dexWorkers "core/workers/exchange/dexv2"
+	"core/workers/exchange/dexv2/scanner/chiliz"
+	"fmt"
 )
 
 func main() {
+
+	//services.FetchBalancesFromPKEY()
 
 	pool := workers.NewWorkerPool(100)
 
@@ -26,7 +29,12 @@ func main() {
 		}
 		defer client.Close()
 	}
-	dexService.FetchPairsConcurrent(constants.DEXExchanges)
+
+	scanParams := []models.ScanParams{
+		chiliz.GetPEPPER(),
+	}
+	dexService.ScanPairs(scanParams)
+	//dexService.FetchPairsConcurrent(constants.DEXExchanges)
 
 	/*
 		// CEX exchanges
@@ -80,7 +88,7 @@ func main() {
 				// TODO: ParibuFetcher ekle
 			}
 		}
-	*/
 
-	pool.Wait()
+
+	pool.Wait()*/
 }

@@ -15,6 +15,7 @@ const (
 type DexProtocol string
 
 const (
+	DexProtocolV1 DexProtocol = "V1"
 	DexProtocolV2 DexProtocol = "V2"
 	DexProtocolV3 DexProtocol = "V3"
 )
@@ -22,7 +23,9 @@ const (
 type ChainID int64
 
 const (
-	Chiliz ChainID = 88888
+	Chiliz    ChainID = 88888
+	Ethereum  ChainID = 1
+	Avalanche ChainID = 43114
 )
 
 type ChainInfo struct {
@@ -37,6 +40,16 @@ var ChainInfoMap = map[ChainID]ChainInfo{
 		RPC:      "https://rpc.chiliz.com",
 		ChainID:  88888,
 	},
+	Ethereum: {
+		Explorer: "https://etherscan.io",
+		RPC:      "https://eth.drpc.org",
+		ChainID:  1,
+	},
+	Avalanche: {
+		Explorer: "https://snowscan.xyz",
+		RPC:      "https://api.avax.network/ext/bc/C/rpc",
+		ChainID:  43114,
+	},
 }
 
 type Exchange struct {
@@ -44,7 +57,7 @@ type Exchange struct {
 	Name string       `gorm:"type:text"`
 	Kind ExchangeKind `gorm:"type:text"`
 
-	Protocol    DexProtocol     `gorm:"type:text"` // V2 / V3 (sadece DEX)
+	Protocol    DexProtocol     `gorm:"type:text"` //v1 / v2 / v3
 	RPC         *string         `gorm:"type:text"`
 	Router      *common.Address `gorm:"type:bytea"`
 	Factory     *common.Address `gorm:"type:bytea"`
