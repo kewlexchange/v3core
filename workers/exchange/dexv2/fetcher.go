@@ -177,8 +177,12 @@ func (d *DexV2Fetcher) FetchReserves(pairs []models.TradingPair) ([]models.Tradi
 	for i, pair := range tradePairs {
 		pairAddress := pairs[i].Pair
 		if pairAddress.Hex() == pair.Pair.Hex() {
-			pairs[i].Base = pair.Token0
-			pairs[i].Quote = pair.Token1
+			base := pair.Token0.Hex()
+			quote := pair.Token1.Hex()
+
+			pairs[i].Base = &base
+			pairs[i].Quote = &quote
+
 			pairs[i].BaseReserve = pair.Reserve0
 			pairs[i].QuoteReserve = pair.Reserve1
 

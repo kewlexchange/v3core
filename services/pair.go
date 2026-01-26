@@ -66,20 +66,20 @@ func (s *PairService) SaveJSONToFile(outputDir, prefix string, data interface{})
 }
 
 func (s *PairService) PriceNativeOf(asset common.Address, p *models.TradingPair) *decimal.Decimal {
-	if p.Base == asset {
+	if *p.BaseCurrency.Contract == asset {
 		return p.BasePriceNative
 	}
-	if p.Quote == asset {
+	if *p.QuoteCurrency.Contract == asset {
 		return p.QuotePriceNative
 	}
 	return nil
 }
 
 func (s *PairService) PriceUSDOf(asset common.Address, p *models.TradingPair) *decimal.Decimal {
-	if p.Base == asset {
+	if *p.BaseCurrency.Contract == asset {
 		return p.BasePriceUSD
 	}
-	if p.Quote == asset {
+	if *p.QuoteCurrency.Contract == asset {
 		return p.QuotePriceUSD
 	}
 	return nil
@@ -96,8 +96,8 @@ func (s *PairService) FindPair(assets []models.Asset, currency models.Currency, 
 
 			for _, pair := range asset.TradingPairs {
 
-				if (pair.Base == stableOrNativeToken && pair.Quote == *token) ||
-					(pair.Base == *token && pair.Quote == stableOrNativeToken) {
+				if (*pair.BaseCurrency.Contract == stableOrNativeToken && *pair.QuoteCurrency.Contract == *token) ||
+					(*pair.BaseCurrency.Contract == *token && *pair.QuoteCurrency.Contract == stableOrNativeToken) {
 
 					currentLiquidity := new(big.Int).Mul(pair.BaseReserve, pair.QuoteReserve)
 

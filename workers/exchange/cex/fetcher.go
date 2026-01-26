@@ -15,7 +15,7 @@ func NewCexFetcher(client any) *CexFetcher {
 	return &CexFetcher{client: client}
 }
 
-func (c *CexFetcher) FetchPairs(exchange models.Exchange) ([]models.Pair, error) {
+func (c *CexFetcher) FetchPairs(exchange models.Exchange) ([]models.TradingPair, error) {
 	log.Printf("[CEX Fetcher] Fetching pairs from %s ...", exchange.Name)
 
 	// CCXT-Go async LoadMarkets çağrısı
@@ -39,7 +39,7 @@ func (c *CexFetcher) FetchPairs(exchange models.Exchange) ([]models.Pair, error)
 	pretty, _ := json.MarshalIndent(raw, "", "  ")
 	fmt.Println(string(pretty))
 
-	pairs := []models.Pair{}
+	pairs := []models.TradingPair{}
 
 	// ÖNEMLİ → raw doğrudan "symbol → market"
 	for symbol, entry := range raw {
@@ -58,11 +58,11 @@ func (c *CexFetcher) FetchPairs(exchange models.Exchange) ([]models.Pair, error)
 			continue
 		}
 
-		pair := models.Pair{
+		pair := models.TradingPair{
 			ExchangeID: exchange.ID,
 			Symbol:     symbol,
-			Base:       base,
-			Quote:      quote,
+			Base:       &base,
+			Quote:      &quote,
 		}
 
 		fmt.Println("base", exchange.Name, base, quote)

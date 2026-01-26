@@ -21,8 +21,8 @@ type TradingPair struct {
 	QuoteCurrency   Currency  `gorm:"foreignKey:QuoteCurrencyID"`
 
 	Pair  common.Address
-	Base  common.Address
-	Quote common.Address
+	Base  *string `gorm:"type:text"`
+	Quote *string `gorm:"type:text"`
 
 	// BASE ASSETIN QUOTEy ye gore FIYATI
 	BasePrice *decimal.Decimal `gorm:"type:numeric"`

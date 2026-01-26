@@ -64,7 +64,7 @@ func Migrate(db *gorm.DB) error {
 	err := db.AutoMigrate(
 		&models.Currency{},
 		&models.Exchange{},
-		&models.Pair{},
+		&models.TradingPair{},
 	)
 
 	return err
