@@ -22,16 +22,14 @@ type Route = entities.Route
 func NewToken(
 	chainID constants.ChainID,
 	address common.Address,
-	decimals uint,
+	decimals int,
 	symbol string,
 	name string,
 ) (*entities.Token, error) {
+	//(chainID constants.ChainID, address common.Address, decimals int, symbol, name string)
 	return entities.NewToken(chainID, address, decimals, symbol, name)
 }
 
-func NewPair(
-	a *entities.TokenAmount,
-	b *entities.TokenAmount,
-) (*entities.Pair, error) {
-	return entities.NewPair(a, b)
+func NewPair(tokenAmountA, tokenAmountB *TokenAmount, address *common.Address) (*entities.Pair, error) {
+	return entities.NewPair(tokenAmountA, tokenAmountB, address)
 }

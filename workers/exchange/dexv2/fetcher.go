@@ -100,7 +100,7 @@ func (d *DexV2Fetcher) FetchPairs(ex models.Exchange) ([]models.TradingPair, err
 		}
 
 		pairs = append(pairs, models.TradingPair{
-			Pair:     pairAddress.Hex(),
+			Pair:     pairAddress,
 			Exchange: ex,
 		})
 
@@ -164,7 +164,7 @@ func (d *DexV2Fetcher) FetchReserves(pairs []models.TradingPair) ([]models.Tradi
 
 	var pairlist []common.Address
 	for _, pair := range pairs {
-		pairlist = append(pairlist, common.HexToAddress(pair.Pair))
+		pairlist = append(pairlist, pair.Pair)
 	}
 
 	tradePairs, err := kewlSwap.GetReservesByPairAddresses(&bind.CallOpts{}, pairlist)
@@ -175,10 +175,10 @@ func (d *DexV2Fetcher) FetchReserves(pairs []models.TradingPair) ([]models.Tradi
 	// tradePairs artık []kewlSwap.TradePairInfo tipinde
 	var minLiquidity = big.NewInt(1000) // 1000 Wei minimum likidite
 	for i, pair := range tradePairs {
-		pairAddress := common.HexToAddress(pairs[i].Pair)
+		pairAddress := pairs[i].Pair
 		if pairAddress.Hex() == pair.Pair.Hex() {
-			pairs[i].Base = pair.Token0.Hex()
-			pairs[i].Quote = pair.Token1.Hex()
+			pairs[i].Base = pair.Token0
+			pairs[i].Quote = pair.Token1
 			pairs[i].BaseReserve = pair.Reserve0
 			pairs[i].QuoteReserve = pair.Reserve1
 

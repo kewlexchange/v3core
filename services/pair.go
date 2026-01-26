@@ -66,28 +66,28 @@ func (s *PairService) SaveJSONToFile(outputDir, prefix string, data interface{})
 }
 
 func (s *PairService) PriceNativeOf(asset common.Address, p *models.TradingPair) *decimal.Decimal {
-	if p.Base == asset.Hex() {
+	if p.Base == asset {
 		return p.BasePriceNative
 	}
-	if p.Quote == asset.Hex() {
+	if p.Quote == asset {
 		return p.QuotePriceNative
 	}
 	return nil
 }
 
 func (s *PairService) PriceUSDOf(asset common.Address, p *models.TradingPair) *decimal.Decimal {
-	if p.Base == asset.Hex() {
+	if p.Base == asset {
 		return p.BasePriceUSD
 	}
-	if p.Quote == asset.Hex() {
+	if p.Quote == asset {
 		return p.QuotePriceUSD
 	}
 	return nil
 }
 
-func (s *PairService) FindPair(assets []models.Asset, currency models.Currency, stableOrNativeToken string) *models.TradingPair {
+func (s *PairService) FindPair(assets []models.Asset, currency models.Currency, stableOrNativeToken common.Address) *models.TradingPair {
 
-	token := currency.Contract.Hex()
+	token := currency.Contract
 
 	var bestPair *models.TradingPair
 	var bestLiquidity *big.Int
@@ -96,8 +96,8 @@ func (s *PairService) FindPair(assets []models.Asset, currency models.Currency, 
 
 			for _, pair := range asset.TradingPairs {
 
-				if (pair.Base == stableOrNativeToken && pair.Quote == token) ||
-					(pair.Base == token && pair.Quote == stableOrNativeToken) {
+				if (pair.Base == stableOrNativeToken && pair.Quote == *token) ||
+					(pair.Base == *token && pair.Quote == stableOrNativeToken) {
 
 					currentLiquidity := new(big.Int).Mul(pair.BaseReserve, pair.QuoteReserve)
 

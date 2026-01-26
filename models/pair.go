@@ -3,6 +3,7 @@ package models
 import (
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 )
@@ -19,9 +20,9 @@ type TradingPair struct {
 	QuoteCurrencyID uuid.UUID `gorm:"type:uuid;not null"  json:"-"`
 	QuoteCurrency   Currency  `gorm:"foreignKey:QuoteCurrencyID"`
 
-	Pair  string `gorm:"type:text"`
-	Base  string `gorm:"type:text"`
-	Quote string `gorm:"type:text"`
+	Pair  common.Address
+	Base  common.Address
+	Quote common.Address
 
 	// BASE ASSETIN QUOTEy ye gore FIYATI
 	BasePrice *decimal.Decimal `gorm:"type:numeric"`
