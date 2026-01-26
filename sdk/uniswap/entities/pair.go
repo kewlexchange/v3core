@@ -103,7 +103,15 @@ func NewPair(tokenAmountA, tokenAmountB *TokenAmount, address *common.Address) (
 		Address:      address,
 		TokenAmounts: tokenAmounts,
 	}
-	pair.LiquidityToken, err = NewToken(tokenAmountA.Token.ChainID, *address,
+
+	if address != nil {
+		pair.Address = address
+	} else {
+		addr := pair.GetAddress()
+		pair.Address = &addr
+	}
+
+	pair.LiquidityToken, err = NewToken(tokenAmountA.Token.ChainID, *pair.Address,
 		constants.Decimals18, constants.Univ2Symbol, constants.Univ2Name)
 	return pair, err
 }
@@ -287,7 +295,9 @@ func (p *Pair) GetInputAmount(outputAmount *TokenAmount) (*TokenAmount, *Pair, e
 	if err != nil {
 		return nil, nil, err
 	}
-	pair, err := NewPair(tokenAmountA, tokenAmountB, p.Address)
+
+	addr := p.GetAddress()
+	pair, err := NewPair(tokenAmountA, tokenAmountB, &addr)
 	if err != nil {
 		return nil, nil, err
 	}
