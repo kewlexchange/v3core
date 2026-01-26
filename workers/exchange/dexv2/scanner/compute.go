@@ -62,37 +62,27 @@ func PriceCHZPerToken(p models.Pair, nativeToken common.Address) *big.Int {
 	// decimal değerlerini int'e çevir
 
 	var reserveIn, reserveOut *big.Int
-	var decimals int64
+	var decimals *big.Int
 
 	if p.Base == nativeToken.Hex() {
 		reserveIn = p.BaseReserve
 		reserveOut = p.QuoteReserve
-		decimals = p.BaseDecimals.Int64() // Base token decimal
+		decimals = p.BaseDecimals // Base token decimal
 	} else if p.Quote == nativeToken.Hex() {
 		reserveIn = p.QuoteReserve
 		reserveOut = p.BaseReserve
-		decimals = p.QuoteDecimals.Int64() // Quote token decimal
+		decimals = p.QuoteDecimals // Quote token decimal
 	} else {
 		return big.NewInt(0)
 	}
 
 	// one = 10^decimals
-	one := new(big.Int).Exp(big.NewInt(10), big.NewInt(decimals), nil)
+	one := new(big.Int).Exp(big.NewInt(10), decimals, nil)
 
 	amountOut := getAmountOut(one, reserveIn, reserveOut)
 	if amountOut.Cmp(big.NewInt(0)) == 0 {
 		return big.NewInt(0)
 	}
-
-	fmt.Println("AMOUNT OUT ", amountOut)
-
-	amountOutF := new(big.Float).SetInt(amountOut)
-	oneF := new(big.Float).SetInt(one)
-
-	priceFloat, _ := new(big.Float).Quo(amountOutF, oneF).Float64()
-
-	fmt.Println("AmountOut", amountOut, priceFloat)
-
 	return amountOut
 }
 
