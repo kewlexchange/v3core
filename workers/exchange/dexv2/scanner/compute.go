@@ -40,7 +40,6 @@ func FlashSwap(scan models.ScanParams, tradingPairs []models.TradingPair) {
 		}
 
 		fmt.Println("ChainId", pair.Address, tradingPair.Pair)
-
 		fmt.Println("Token0Price", pair.Token0Price().ToSignificant(8))
 		fmt.Println("Token1Price", pair.Token1Price().ToSignificant(8))
 
