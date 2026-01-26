@@ -6,7 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/miraclesu/uniswap-sdk-go/constants"
+	constants "core/sdk/uniswap/constants"
 )
 
 // nolint funlen
