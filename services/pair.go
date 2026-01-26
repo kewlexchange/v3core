@@ -29,7 +29,7 @@ func NewPairService(pool *workers.WorkerPool, fetcher exchange.PairFetcher) *Pai
 	}
 }
 
-func addPairToAsset(assetList *[]models.Asset, currency models.Currency, p *models.Pair) {
+func addPairToAsset(assetList *[]models.Asset, currency models.Currency, p *models.TradingPair) {
 	for i := range *assetList {
 		if (*assetList)[i].Currency.Contract.Hex() == currency.Contract.Hex() {
 			(*assetList)[i].TradingPairs = append((*assetList)[i].TradingPairs, *p)
@@ -39,7 +39,7 @@ func addPairToAsset(assetList *[]models.Asset, currency models.Currency, p *mode
 	*assetList = append(*assetList, models.Asset{
 		ContractAddress: currency.Contract.Hex(),
 		Currency:        currency,
-		TradingPairs:    []models.Pair{*p},
+		TradingPairs:    []models.TradingPair{*p},
 	})
 }
 
@@ -65,7 +65,7 @@ func (s *PairService) SaveJSONToFile(outputDir, prefix string, data interface{})
 	return filename, nil
 }
 
-func (s *PairService) PriceNativeOf(asset common.Address, p *models.Pair) *decimal.Decimal {
+func (s *PairService) PriceNativeOf(asset common.Address, p *models.TradingPair) *decimal.Decimal {
 	if p.Base == asset.Hex() {
 		return p.BasePriceNative
 	}
@@ -75,7 +75,7 @@ func (s *PairService) PriceNativeOf(asset common.Address, p *models.Pair) *decim
 	return nil
 }
 
-func (s *PairService) PriceUSDOf(asset common.Address, p *models.Pair) *decimal.Decimal {
+func (s *PairService) PriceUSDOf(asset common.Address, p *models.TradingPair) *decimal.Decimal {
 	if p.Base == asset.Hex() {
 		return p.BasePriceUSD
 	}
@@ -85,11 +85,11 @@ func (s *PairService) PriceUSDOf(asset common.Address, p *models.Pair) *decimal.
 	return nil
 }
 
-func (s *PairService) FindPair(assets []models.Asset, currency models.Currency, stableOrNativeToken string) *models.Pair {
+func (s *PairService) FindPair(assets []models.Asset, currency models.Currency, stableOrNativeToken string) *models.TradingPair {
 
 	token := currency.Contract.Hex()
 
-	var bestPair *models.Pair
+	var bestPair *models.TradingPair
 	var bestLiquidity *big.Int
 	for _, asset := range assets {
 		if asset.Currency.Contract.Hex() == currency.Contract.Hex() {
@@ -117,8 +117,8 @@ func (s *PairService) FindPair(assets []models.Asset, currency models.Currency, 
 
 func (s *PairService) FetchPairsConcurrent(exchanges []models.Exchange) {
 	var wg sync.WaitGroup
-	mu := &sync.Mutex{}         // pairs slice erişimi için mutex
-	allPairs := []models.Pair{} // veya pairs'in tipi neyse onu kullan
+	mu := &sync.Mutex{}                // pairs slice erişimi için mutex
+	allPairs := []models.TradingPair{} // veya pairs'in tipi neyse onu kullan
 
 	for _, ex := range exchanges {
 		wg.Add(1)
@@ -145,7 +145,7 @@ func (s *PairService) FetchPairsConcurrent(exchanges []models.Exchange) {
 }
 
 func (s *PairService) ScanPairs(params []models.ScanParams) {
-	allPairs := []models.Pair{} // veya pairs'in tipi neyse onu kullan
+	allPairs := []models.TradingPair{} // veya pairs'in tipi neyse onu kullan
 
 	for _, param := range params {
 		fmt.Println("Scanner", param.Token)

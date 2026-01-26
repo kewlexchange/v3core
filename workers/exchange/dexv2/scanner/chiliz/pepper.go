@@ -5,15 +5,15 @@ import (
 	"core/utils"
 )
 
-func GetPepperPairs() (pairs []models.Pair) {
+func GetPepperPairs() (pairs []models.TradingPair) {
 
-	pairs = append(pairs, models.Pair{
+	pairs = append(pairs, models.TradingPair{
 		Pair: "0x5F3efAB95224dBb5490E8DDc8D2C1dAAd4c0db37"})
 
-	pairs = append(pairs, models.Pair{
+	pairs = append(pairs, models.TradingPair{
 		Pair: "0x59ae0cff65e648fecec8e539a6f6c89c337a48f1"})
 
-	pairs = append(pairs, models.Pair{
+	pairs = append(pairs, models.TradingPair{
 		Pair: "0xd83bb0b94132e7e72d7d5bfb481378ca770fc614"})
 	return pairs
 }

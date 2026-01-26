@@ -23,7 +23,7 @@ import (
 
 type DexV2Fetcher struct{}
 
-func (d *DexV2Fetcher) FetchPairs(ex models.Exchange) ([]models.Pair, error) {
+func (d *DexV2Fetcher) FetchPairs(ex models.Exchange) ([]models.TradingPair, error) {
 
 	evmClient, err := services.GetEVMClient(*ex.ChainID, *ex.RPC)
 	if err != nil {
@@ -81,7 +81,7 @@ func (d *DexV2Fetcher) FetchPairs(ex models.Exchange) ([]models.Pair, error) {
 	if err := json.Unmarshal(jsonBytes, &results); err != nil {
 		return nil, fmt.Errorf("json unmarshal failed: %w", err)
 	}
-	pairs := make([]models.Pair, 0, length.Int64())
+	pairs := make([]models.TradingPair, 0, length.Int64())
 	for _, res := range results {
 		if !res.Success {
 			continue
@@ -99,7 +99,7 @@ func (d *DexV2Fetcher) FetchPairs(ex models.Exchange) ([]models.Pair, error) {
 			continue
 		}
 
-		pairs = append(pairs, models.Pair{
+		pairs = append(pairs, models.TradingPair{
 			Pair:     pairAddress.Hex(),
 			Exchange: ex,
 		})
@@ -148,7 +148,7 @@ func (d *DexV2Fetcher) CalculatePrices(reserveBase, reserveQuote, decimalsBase, 
 	return priceBase, priceQuote, nil
 }
 
-func (d *DexV2Fetcher) FetchReserves(pairs []models.Pair) ([]models.Pair, error) {
+func (d *DexV2Fetcher) FetchReserves(pairs []models.TradingPair) ([]models.TradingPair, error) {
 
 	kewlInfo, _ := constants.GetExchangeByName("KEWL")
 	evmClient, err := services.GetEVMClient(*kewlInfo.ChainID, *kewlInfo.RPC)

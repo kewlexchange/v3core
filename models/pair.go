@@ -7,7 +7,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type Pair struct {
+type TradingPair struct {
 	ID uuid.UUID `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"  json:"-"`
 
 	ExchangeID uuid.UUID `gorm:"type:uuid;not null"  json:"-"`
@@ -56,6 +56,6 @@ type Pair struct {
 	IsEnabled bool `gorm:"default:true"`
 }
 
-func (Pair) TableName() string {
+func (TradingPair) TableName() string {
 	return "pairs"
 }
