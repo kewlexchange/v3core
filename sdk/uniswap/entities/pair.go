@@ -86,29 +86,43 @@ func getCreate2Address(addressA, addressB common.Address) common.Address {
 
 // Pair warps uniswap pair
 type Pair struct {
+	Address        *common.Address
 	LiquidityToken *Token
 	// sorted tokens
 	TokenAmounts
 }
 
 // NewPair creates Pair
-func NewPair(tokenAmountA, tokenAmountB *TokenAmount) (*Pair, error) {
+func NewPair(tokenAmountA, tokenAmountB *TokenAmount, address *common.Address) (*Pair, error) {
 	tokenAmounts, err := NewTokenAmounts(tokenAmountA, tokenAmountB)
 	if err != nil {
 		return nil, err
 	}
 
 	pair := &Pair{
+		Address:      address,
 		TokenAmounts: tokenAmounts,
 	}
-	pair.LiquidityToken, err = NewToken(tokenAmountA.Token.ChainID, pair.GetAddress(),
+	pair.LiquidityToken, err = NewToken(tokenAmountA.Token.ChainID, *address,
 		constants.Decimals18, constants.Univ2Symbol, constants.Univ2Name)
 	return pair, err
 }
 
 // GetAddress returns a contract's address for a pair
-func (p *Pair) GetAddress() common.Address {
+func (p *Pair) GetAddressEx() common.Address {
 	return _PairAddressCache.GetAddress(p.TokenAmounts[0].Token.Address, p.TokenAmounts[1].Token.Address)
+}
+
+func (p *Pair) GetAddress() common.Address {
+	if p.Address != nil {
+		return *p.Address
+	}
+	addr := _PairAddressCache.GetAddress(
+		p.TokenAmounts[0].Token.Address,
+		p.TokenAmounts[1].Token.Address,
+	)
+	p.Address = &addr
+	return addr
 }
 
 // InvolvesToken Returns true if the token is either token0 or token1
@@ -220,7 +234,9 @@ func (p *Pair) GetOutputAmount(inputAmount *TokenAmount) (*TokenAmount, *Pair, e
 	if err != nil {
 		return nil, nil, err
 	}
-	pair, err := NewPair(tokenAmountA, tokenAmountB)
+
+	addr := p.GetAddress()
+	pair, err := NewPair(tokenAmountA, tokenAmountB, &addr)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -271,7 +287,7 @@ func (p *Pair) GetInputAmount(outputAmount *TokenAmount) (*TokenAmount, *Pair, e
 	if err != nil {
 		return nil, nil, err
 	}
-	pair, err := NewPair(tokenAmountA, tokenAmountB)
+	pair, err := NewPair(tokenAmountA, tokenAmountB, p.Address)
 	if err != nil {
 		return nil, nil, err
 	}

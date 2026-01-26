@@ -46,15 +46,15 @@ func TestRoute(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	pair01, err := NewPair(tokenAmount00, tokenAmount01)
+	pair01, err := NewPair(tokenAmount00, tokenAmount01, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	pair0Weth, err := NewPair(tokenAmount0Weth0, tokenAmount0Weth1)
+	pair0Weth, err := NewPair(tokenAmount0Weth0, tokenAmount0Weth1, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	pair1Weth, err := NewPair(tokenAmount1Weth0, tokenAmount1Weth1)
+	pair1Weth, err := NewPair(tokenAmount1Weth0, tokenAmount1Weth1, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -25,21 +25,21 @@ func TestTrade(t *testing.T) {
 	tokenAmount_3_900, _ := NewTokenAmount(token3, big.NewInt(900))
 	tokenAmount_3_1300, _ := NewTokenAmount(token3, big.NewInt(1300))
 
-	pair_0_1, _ := NewPair(tokenAmount_0_1000, tokenAmount_1_1000)
-	pair_0_2, _ := NewPair(tokenAmount_0_1000, tokenAmount_2_1100)
-	pair_0_3, _ := NewPair(tokenAmount_0_1000, tokenAmount_3_900)
-	pair_1_2, _ := NewPair(tokenAmount_1_1200, tokenAmount_2_1000)
-	pair_1_3, _ := NewPair(tokenAmount_1_1200, tokenAmount_3_1300)
+	pair_0_1, _ := NewPair(tokenAmount_0_1000, tokenAmount_1_1000, nil)
+	pair_0_2, _ := NewPair(tokenAmount_0_1000, tokenAmount_2_1100, nil)
+	pair_0_3, _ := NewPair(tokenAmount_0_1000, tokenAmount_3_900, nil)
+	pair_1_2, _ := NewPair(tokenAmount_1_1200, tokenAmount_2_1000, nil)
+	pair_1_3, _ := NewPair(tokenAmount_1_1200, tokenAmount_3_1300, nil)
 
 	// use WETH as ETHR
 	tokenETHER := WETH[constants.Mainnet]
 	tokenAmountETHER, _ := NewTokenAmount(tokenETHER, big.NewInt(100))
 	tokenAmount_0_weth, _ := NewTokenAmount(tokenETHER, big.NewInt(1000))
-	pair_weth_0, _ := NewPair(tokenAmount_0_weth, tokenAmount_0_1000)
+	pair_weth_0, _ := NewPair(tokenAmount_0_weth, tokenAmount_0_1000, nil)
 
 	tokenAmount_0_0, _ := NewTokenAmount(token0, big.NewInt(0))
 	tokenAmount_1_0, _ := NewTokenAmount(token1, big.NewInt(0))
-	empty_pair_0_1, _ := NewPair(tokenAmount_0_0, tokenAmount_1_0)
+	empty_pair_0_1, _ := NewPair(tokenAmount_0_0, tokenAmount_1_0, nil)
 	_ = empty_pair_0_1
 
 	{

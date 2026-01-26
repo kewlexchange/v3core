@@ -58,7 +58,7 @@ func TestPair(t *testing.T) {
 	// cannot be used for tokens on different chains
 	{
 		tokenAmountB, _ := NewTokenAmount(WETH[constants.Rinkeby], constants.B100)
-		_, output := NewPair(tokenAmountUSDC, tokenAmountB)
+		_, output := NewPair(tokenAmountUSDC, tokenAmountB, nil)
 		expect := ErrDiffChainID
 		if expect != output {
 			t.Errorf("expect[%+v], but got[%+v]", expect, output)
@@ -75,8 +75,8 @@ func TestPair(t *testing.T) {
 	}
 
 	{
-		pairA, _ := NewPair(tokenAmountUSDC, tokenAmountDAI)
-		pairB, _ := NewPair(tokenAmountDAI, tokenAmountUSDC)
+		pairA, _ := NewPair(tokenAmountUSDC, tokenAmountDAI, nil)
+		pairB, _ := NewPair(tokenAmountDAI, tokenAmountUSDC, nil)
 		expect := DAI
 		// always is the token that sorts before
 		output := pairA.Token0()
@@ -101,8 +101,8 @@ func TestPair(t *testing.T) {
 	}
 
 	{
-		pairA, _ := NewPair(tokenAmountUSDC, tokenAmountDAI101)
-		pairB, _ := NewPair(tokenAmountDAI101, tokenAmountUSDC)
+		pairA, _ := NewPair(tokenAmountUSDC, tokenAmountDAI101, nil)
+		pairB, _ := NewPair(tokenAmountDAI101, tokenAmountUSDC, nil)
 		expect := tokenAmountDAI101
 		// always comes from the token that sorts before
 		output := pairA.Reserve0()
@@ -127,8 +127,8 @@ func TestPair(t *testing.T) {
 	}
 
 	{
-		pairA, _ := NewPair(tokenAmountUSDC101, tokenAmountDAI)
-		pairB, _ := NewPair(tokenAmountDAI, tokenAmountUSDC101)
+		pairA, _ := NewPair(tokenAmountUSDC101, tokenAmountDAI, nil)
+		pairB, _ := NewPair(tokenAmountDAI, tokenAmountUSDC101, nil)
 		expect := NewPrice(DAI.Currency, USDC.Currency, constants.B100, big.NewInt(101))
 		// returns price of token0 in terms of token1
 		output := pairA.Token0Price()
@@ -153,7 +153,7 @@ func TestPair(t *testing.T) {
 	}
 
 	{
-		pair, _ := NewPair(tokenAmountUSDC101, tokenAmountDAI)
+		pair, _ := NewPair(tokenAmountUSDC101, tokenAmountDAI, nil)
 		// returns price of token in terms of other token
 		expect := pair.Token0Price()
 		output, _ := pair.PriceOf(tokenAmountDAI.Token)
@@ -178,8 +178,8 @@ func TestPair(t *testing.T) {
 	}
 
 	{
-		pairA, _ := NewPair(tokenAmountUSDC, tokenAmountDAI101)
-		pairB, _ := NewPair(tokenAmountDAI101, tokenAmountUSDC)
+		pairA, _ := NewPair(tokenAmountUSDC, tokenAmountDAI101, nil)
+		pairB, _ := NewPair(tokenAmountDAI101, tokenAmountUSDC, nil)
 		expect := tokenAmountUSDC
 		// returns reserves of the given token
 		output, _ := pairA.ReserveOf(USDC)
@@ -213,8 +213,8 @@ func TestPair(t *testing.T) {
 	}
 
 	{
-		pairA, _ := NewPair(tokenAmountUSDC, tokenAmountDAI)
-		pairB, _ := NewPair(tokenAmountDAI, tokenAmountUSDC)
+		pairA, _ := NewPair(tokenAmountUSDC, tokenAmountDAI, nil)
+		pairB, _ := NewPair(tokenAmountDAI, tokenAmountUSDC, nil)
 		expect := constants.Mainnet
 		// returns the token0 chainId
 		output := pairA.ChainID()
@@ -249,7 +249,7 @@ func TestPair(t *testing.T) {
 			tokenB, _ := NewToken(constants.Rinkeby, common.HexToAddress("0x0000000000000000000000000000000000000002"), 18, "", "")
 			tokenAmountA, _ := NewTokenAmount(tokenA, big.NewInt(0))
 			tokenAmountB, _ := NewTokenAmount(tokenB, big.NewInt(0))
-			pair, _ := NewPair(tokenAmountA, tokenAmountB)
+			pair, _ := NewPair(tokenAmountA, tokenAmountB, nil)
 			{
 				tokenAmount, _ := NewTokenAmount(pair.LiquidityToken, big.NewInt(0))
 				tokenAmountA, _ := NewTokenAmount(tokenA, big.NewInt(1000))
@@ -283,7 +283,7 @@ func TestPair(t *testing.T) {
 			// getLiquidityMinted:!0
 			tokenAmountA, _ = NewTokenAmount(tokenA, big.NewInt(10000))
 			tokenAmountB, _ = NewTokenAmount(tokenB, big.NewInt(10000))
-			pair, _ = NewPair(tokenAmountA, tokenAmountB)
+			pair, _ = NewPair(tokenAmountA, tokenAmountB, nil)
 			{
 				tokenAmount, _ := NewTokenAmount(pair.LiquidityToken, big.NewInt(10000))
 				tokenAmountA, _ = NewTokenAmount(tokenA, big.NewInt(2000))
@@ -299,7 +299,7 @@ func TestPair(t *testing.T) {
 			// getLiquidityValue:!feeOn
 			tokenAmountA, _ = NewTokenAmount(tokenA, big.NewInt(1000))
 			tokenAmountB, _ = NewTokenAmount(tokenB, big.NewInt(1000))
-			pair, _ = NewPair(tokenAmountA, tokenAmountB)
+			pair, _ = NewPair(tokenAmountA, tokenAmountB, nil)
 			tokenAmount, _ := NewTokenAmount(pair.LiquidityToken, big.NewInt(1000))
 			tokenAmount500, _ := NewTokenAmount(pair.LiquidityToken, big.NewInt(500))
 			{
