@@ -187,11 +187,13 @@ func (d *DexV2Fetcher) FetchReserves(pairs []models.TradingPair) ([]models.Tradi
 			pairs[i].BaseDecimals = pair.Token0Decimals
 			pairs[i].QuoteDecimals = pair.Token1Decimals
 
+			pairs[i].BaseCurrency.ChainID = kewlInfo.ChainID
 			pairs[i].BaseCurrency.Contract = &pair.Token0
 			pairs[i].BaseCurrency.Decimals = pair.Token0Decimals
 
 			pairs[i].QuoteCurrency.Contract = &pair.Token1
 			pairs[i].QuoteCurrency.Decimals = pair.Token1Decimals
+			pairs[i].QuoteCurrency.ChainID = kewlInfo.ChainID
 
 			var priceBase decimal.Decimal
 			var priceQuote decimal.Decimal
