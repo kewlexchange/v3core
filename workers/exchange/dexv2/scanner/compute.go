@@ -25,42 +25,83 @@ func GetPrice(nativeCurrency common.Address, pair *uniswapSDKEntities.Pair) *uni
 }
 
 func OptimalInputExact(R1, R2, R3, R4 *big.Int) *big.Int {
+	feeNum := big.NewInt(997)
+	feeDen := big.NewInt(1000)
 
-	fNum := big.NewInt(997)
-	fDen := big.NewInt(1000)
+	feeNumSq := new(big.Int).Mul(feeNum, feeNum)
+	feeDenSq := new(big.Int).Mul(feeDen, feeDen)
+	feeNumDen := new(big.Int).Mul(feeNum, feeDen)
 
-	// t = sqrt(R1 * R2 * R3 * R4)
-	t := new(big.Int).Mul(R1, R2)
-	t.Mul(t, R3)
-	t.Mul(t, R4)
+	// term1 = R1 * R2 * R3 * R4 * feeNumSq * feeDenSq
+	term1 := new(big.Int).Mul(R1, R2)
+	term1.Mul(term1, R3)
+	term1.Mul(term1, R4)
+	term1.Mul(term1, feeNumSq)
+	term1.Mul(term1, feeDenSq)
 
-	sqrt := new(big.Int).Sqrt(t)
+	sqrtTerm := new(big.Int).Sqrt(term1)
+	bVal := new(big.Int).Mul(R1, R3)
+	bVal.Mul(bVal, feeDenSq)
 
-	// sqrt * f
-	sqrt.Mul(sqrt, fNum)
-	sqrt.Div(sqrt, fDen)
-
-	b := new(big.Int).Mul(R1, R3)
-
-	fmt.Println("sqrt:", sqrt.String())
-	fmt.Println("b:", b.String())
-
-	if sqrt.Cmp(b) <= 0 {
-		fmt.Println("NO ARB")
+	if sqrtTerm.Cmp(bVal) <= 0 {
 		return big.NewInt(0)
 	}
 
-	numerator := new(big.Int).Sub(sqrt, b)
+	numerator := new(big.Int).Sub(sqrtTerm, bVal)
+	denomPart1 := new(big.Int).Mul(feeNumDen, R3)
+	denomPart2 := new(big.Int).Mul(feeNumSq, R2)
+	denominator := new(big.Int).Add(denomPart1, denomPart2)
 
-	denominator := new(big.Int).Add(R3, R2)
-	denominator.Mul(denominator, fNum)
-	denominator.Div(denominator, fDen)
-
-	fmt.Println("numerator:", numerator.String())
-	fmt.Println("denominator:", denominator.String())
-
-	return numerator.Div(numerator, denominator)
+	return new(big.Int).Div(numerator, denominator)
 }
+
+func v2AmountOut(amountIn, resIn, resOut *big.Int) *big.Int {
+	if amountIn.Cmp(big.NewInt(0)) <= 0 {
+		return big.NewInt(0)
+	}
+	feeNum := big.NewInt(997)
+	feeDen := big.NewInt(1000)
+	amountInWithFee := new(big.Int).Mul(amountIn, feeNum)
+	numerator := new(big.Int).Mul(amountInWithFee, resOut)
+	denominator := new(big.Int).Add(new(big.Int).Mul(resIn, feeDen), amountInWithFee)
+	return new(big.Int).Div(numerator, denominator)
+}
+
+// Python'daki arb_best_two_pools fonksiyonunun Go karşılığı
+func ArbBestTwoPools(A_rx, A_ry, B_rx, B_ry *big.Int) {
+	// 1. Yön: X -> A -> Y -> B -> X (A'dan al, B'de sat)
+	// Pool A: In=X, Out=Y | Pool B: In=Y, Out=X
+	opt1 := OptimalInputExact(A_rx, A_ry, B_ry, B_rx)
+	profit1 := big.NewInt(0)
+	if opt1.Cmp(big.NewInt(0)) > 0 {
+		dy := v2AmountOut(opt1, A_rx, A_ry)
+		xOut := v2AmountOut(dy, B_ry, B_rx)
+		profit1.Sub(xOut, opt1)
+	}
+
+	// 2. Yön: X -> B -> Y -> A -> X (B'den al, A'da sat)
+	// Pool B: In=X, Out=Y | Pool A: In=Y, Out=X
+	opt2 := OptimalInputExact(B_rx, B_ry, A_ry, A_rx)
+	profit2 := big.NewInt(0)
+	if opt2.Cmp(big.NewInt(0)) > 0 {
+		dy := v2AmountOut(opt2, B_rx, B_ry)
+		xOut := v2AmountOut(dy, A_ry, A_rx)
+		profit2.Sub(xOut, opt2)
+	}
+
+	// Karşılaştırma
+	if profit1.Cmp(big.NewInt(0)) <= 0 && profit2.Cmp(big.NewInt(0)) <= 0 {
+		fmt.Println("İki yönde de kârlı fırsat yok.")
+		return
+	}
+
+	if profit1.Cmp(profit2) >= 0 {
+		fmt.Printf("En iyi rota: A -> B | Giriş: %s | Kâr: %s\n", opt1.String(), profit1.String())
+	} else {
+		fmt.Printf("En iyi rota: B -> A | Giriş: %s | Kâr: %s\n", opt2.String(), profit2.String())
+	}
+}
+
 func FlashSwap(scan models.ScanParams, tradingPairs []models.TradingPair) {
 
 	var cheapPair *uniswapSDKEntities.Pair
@@ -140,8 +181,15 @@ func FlashSwap(scan models.ScanParams, tradingPairs []models.TradingPair) {
 		R3 = expensivePair.Reserve0().Quotient()
 	}
 
-	optimal := OptimalInputExact(R1, R2, R3, R4)
+	fmt.Println(R1, R2, R3, R4)
 
-	fmt.Println("OptimalInput", optimal)
+	decimals := new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil)
+
+	A_rx := new(big.Int).Mul(big.NewInt(1000), decimals)
+	A_ry := new(big.Int).Mul(big.NewInt(2_000_000), decimals)
+	B_rx := new(big.Int).Mul(big.NewInt(1200), decimals)
+	B_ry := new(big.Int).Mul(big.NewInt(2_000_000), decimals)
+
+	ArbBestTwoPools(A_rx, A_ry, B_rx, B_ry)
 
 }
