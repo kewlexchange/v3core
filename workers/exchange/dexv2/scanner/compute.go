@@ -7,6 +7,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/math"
 )
 
 // Fee sabitleri (Uniswap benzeri %0.3 komisyon)
@@ -57,7 +58,7 @@ func ComputeBorrowAmount(RbIn, RbOut, RsIn, RsOut *big.Int) *big.Int {
 	return borrowInt
 }
 
-func PriceCHZPerToken(p models.Pair, nativeToken common.Address) float64 {
+func PriceCHZPerToken(p models.Pair, nativeToken common.Address) *big.Int {
 	// decimal değerlerini int'e çevir
 
 	var reserveIn, reserveOut *big.Int
@@ -72,7 +73,7 @@ func PriceCHZPerToken(p models.Pair, nativeToken common.Address) float64 {
 		reserveOut = p.BaseReserve
 		decimals = p.QuoteDecimals.Int64() // Quote token decimal
 	} else {
-		return 0
+		return big.NewInt(0)
 	}
 
 	// one = 10^decimals
@@ -80,15 +81,19 @@ func PriceCHZPerToken(p models.Pair, nativeToken common.Address) float64 {
 
 	amountOut := getAmountOut(one, reserveIn, reserveOut)
 	if amountOut.Cmp(big.NewInt(0)) == 0 {
-		return 0
+		return big.NewInt(0)
 	}
+
+	fmt.Println("AMOUNT OUT ", amountOut)
 
 	amountOutF := new(big.Float).SetInt(amountOut)
 	oneF := new(big.Float).SetInt(one)
 
 	priceFloat, _ := new(big.Float).Quo(amountOutF, oneF).Float64()
 
-	return priceFloat
+	fmt.Println("AmountOut", amountOut, priceFloat)
+
+	return amountOut
 }
 
 // getReservesForCHZ, pair'daki rezervleri CHZ bazlı input-output olarak döner.
@@ -115,31 +120,29 @@ func ComputeOptimalBorrowWithCHZOutput(scan models.ScanParams, pairs []models.Pa
 		return big.NewInt(0), models.Pair{}, models.Pair{}, fmt.Errorf("en az 2 pair gerekli")
 	}
 
-	minPrice := 1e50
-	maxPrice := 0.0
+	minPrice := new(big.Int).Set(math.MaxBig256)
+	maxPrice := big.NewInt(0)
 	buyIndex, sellIndex := -1, -1
 
 	for i, p := range pairs {
 		price := PriceCHZPerToken(p, scan.NativeToken)
 
-		priceBigFloat := big.NewFloat(price)
-		fmt.Println("FLOAT64", fmt.Sprintf("%f", price))
-
-		fmt.Println("PRICE", priceBigFloat, "PAIR", p.Pair)
-		if price <= 0 {
+		if price.Cmp(big.NewInt(0)) <= 0 {
 			continue
 		}
-		if price < minPrice {
+
+		if price.Cmp(minPrice) < 0 {
 			minPrice = price
 			buyIndex = i
 		}
-		if price > maxPrice {
+
+		if price.Cmp(maxPrice) > 0 {
 			maxPrice = price
 			sellIndex = i
 		}
 	}
 
-	if buyIndex == -1 || sellIndex == -1 || buyIndex == sellIndex || maxPrice <= minPrice {
+	if buyIndex == -1 || sellIndex == -1 || buyIndex == sellIndex || maxPrice.Cmp(minPrice) <= 0 {
 		return big.NewInt(0), models.Pair{}, models.Pair{}, fmt.Errorf("alım ve satım için uygun pool bulunamadı veya karlı değil")
 	}
 
