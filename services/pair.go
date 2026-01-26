@@ -156,7 +156,7 @@ func (s *PairService) ScanPairs(params []models.ScanParams) {
 			return
 		}
 		allPairs = append(allPairs, pairs...)
-		scanner.Arbitrage(param, pairs)
+		scanner.FlashSwap(param, pairs)
 		s.SaveJSONToFile("output", param.Token, pairs)
 	}
 }

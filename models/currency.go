@@ -1,15 +1,17 @@
 package models
 
 import (
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/google/uuid"
 )
 
 type Currency struct {
-	ID         uuid.UUID       `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"  json:"-"`
-	Symbol     string          `gorm:"type:text;not null"` // Global sembol (ETH, BTC, USDT)
-	Name       string          `gorm:"type:text"  json:"-"`
-	Decimals   *string         `gorm:"type:text"  json:"-"`
+	ID         uuid.UUID `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"  json:"-"`
+	Symbol     string    `gorm:"type:text;not null"` // Global sembol (ETH, BTC, USDT)
+	Name       string    `gorm:"type:text"  json:"-"`
+	Decimals   *big.Int
 	Contract   *common.Address `gorm:"type:bytea"`
 	ChainID    *int64          `gorm:"type:bigint"  json:"-"`
 	Logo       *string         `gorm:"type:text"  json:"-"`

@@ -184,14 +184,14 @@ func (d *DexV2Fetcher) FetchReserves(pairs []models.Pair) ([]models.Pair, error)
 
 			pairs[i].BaseReserveStr = utils.StringPtr(utils.FormatUnits(pair.Reserve0, pair.Token0Decimals))
 			pairs[i].QuoteReserveStr = utils.StringPtr(utils.FormatUnits(pair.Reserve1, pair.Token1Decimals))
-			pairs[i].BaseDecimals = utils.BigIntToStringPtr(pair.Token0Decimals)
-			pairs[i].QuoteDecimals = utils.BigIntToStringPtr(pair.Token1Decimals)
+			pairs[i].BaseDecimals = pair.Token0Decimals
+			pairs[i].QuoteDecimals = pair.Token1Decimals
 
 			pairs[i].BaseCurrency.Contract = &pair.Token0
-			pairs[i].BaseCurrency.Decimals = utils.BigIntToStringPtr(pair.Token0Decimals)
+			pairs[i].BaseCurrency.Decimals = pair.Token0Decimals
 
 			pairs[i].QuoteCurrency.Contract = &pair.Token1
-			pairs[i].QuoteCurrency.Decimals = utils.BigIntToStringPtr(pair.Token1Decimals)
+			pairs[i].QuoteCurrency.Decimals = pair.Token1Decimals
 
 			var priceBase decimal.Decimal
 			var priceQuote decimal.Decimal
@@ -200,7 +200,6 @@ func (d *DexV2Fetcher) FetchReserves(pairs []models.Pair) ([]models.Pair, error)
 			pairs[i].BasePrice = &priceBase
 			pairs[i].QuotePrice = &priceQuote
 
-			pairs[i].QuoteDecimals = utils.BigIntToStringPtr(pair.Token1Decimals)
 			isEnabled := pair.Reserve0.Cmp(minLiquidity) >= 0 && pair.Reserve1.Cmp(minLiquidity) >= 0
 			pairs[i].IsEnabled = isEnabled
 		}

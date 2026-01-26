@@ -44,8 +44,8 @@ type Pair struct {
 	BaseReserveStr  *string `gorm:"type:text"`
 	QuoteReserveStr *string `gorm:"type:text"`
 
-	BaseDecimals  *string `gorm:"type:text"`
-	QuoteDecimals *string `gorm:"type:text"`
+	BaseDecimals  *big.Int
+	QuoteDecimals *big.Int
 
 	Symbol      string  `gorm:"type:text"`
 	DisplayName *string `gorm:"type:text"`

@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"math"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -86,4 +87,10 @@ func FormatUnits(amount *big.Int, decimals *big.Int) string {
 	decInt := int(decimals.Int64())
 
 	return f.Text('f', decInt)
+}
+
+func FormatUnitsBigFloat(amount *big.Float, decimals int) string {
+	base := new(big.Float).SetFloat64(math.Pow10(decimals))
+	res := new(big.Float).Quo(amount, base)
+	return res.Text('f', decimals)
 }
