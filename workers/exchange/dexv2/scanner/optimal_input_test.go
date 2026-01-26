@@ -63,8 +63,8 @@ func TestOptimalInputExact_WITH_ARB(t *testing.T) {
 	t.Log("Optimal Input (raw):", optimal.String())
 
 	if optimal.Sign() == 0 {
-		t.Fatal("ARB OLMASI GEREKIRKEN optimal = 0 ÇIKTI ❌")
+		t.Fatal("ARB OLMASI GEREKIRKEN optimal = 0 ÇIKTI")
 	} else {
-		t.Log("ARB FOUND ✅ optimal input:", optimal.String())
+		t.Log("ARB FOUND optimal input:", optimal.String())
 	}
 }
