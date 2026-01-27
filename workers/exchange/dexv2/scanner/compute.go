@@ -2,11 +2,11 @@ package scanner
 
 import (
 	"core/models"
-	uniswapSDKEntities "core/sdk/uniswap/entities"
-	"math/big"
-
 	uniswapSDKConstants "core/sdk/uniswap/constants"
+	uniswapSDKEntities "core/sdk/uniswap/entities"
+	coreUtils "core/utils"
 	"fmt"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -24,82 +24,118 @@ func GetPrice(nativeCurrency common.Address, pair *uniswapSDKEntities.Pair) *uni
 	return price
 }
 
-func OptimalInputExact(R1, R2, R3, R4 *big.Int) *big.Int {
+type ArbResult struct {
+	Route  string
+	Dx     *big.Int
+	Profit *big.Int
+	Mid    *big.Int
+	Out    *big.Int
+}
+
+// OptimalInputExact: Python'daki find_best_dx fonksiyonunun matematiksel "kesin" karşılığıdır.
+func OptimalInputExact(rIn1, rOut1, rIn2, rOut2 *big.Int) *big.Int {
 	feeNum := big.NewInt(997)
 	feeDen := big.NewInt(1000)
 
-	feeNumSq := new(big.Int).Mul(feeNum, feeNum)
-	feeDenSq := new(big.Int).Mul(feeDen, feeDen)
-	feeNumDen := new(big.Int).Mul(feeNum, feeDen)
+	// Katsayılar
+	fNumSq := new(big.Int).Mul(feeNum, feeNum)
+	fDenSq := new(big.Int).Mul(feeDen, feeDen)
+	fNumDen := new(big.Int).Mul(feeNum, feeDen)
 
-	// term1 = R1 * R2 * R3 * R4 * feeNumSq * feeDenSq
-	term1 := new(big.Int).Mul(R1, R2)
-	term1.Mul(term1, R3)
-	term1.Mul(term1, R4)
-	term1.Mul(term1, feeNumSq)
-	term1.Mul(term1, feeDenSq)
+	// sqrt(rIn1 * rOut1 * rIn2 * rOut2 * fNumSq * fDenSq)
+	term1 := new(big.Int).Mul(rIn1, rOut1)
+	term1.Mul(term1, rIn2)
+	term1.Mul(term1, rOut2)
+	term1.Mul(term1, fNumSq)
+	term1.Mul(term1, fDenSq)
 
 	sqrtTerm := new(big.Int).Sqrt(term1)
-	bVal := new(big.Int).Mul(R1, R3)
-	bVal.Mul(bVal, feeDenSq)
+
+	// bVal = rIn1 * rIn2 * fDenSq
+	bVal := new(big.Int).Mul(rIn1, rIn2)
+	bVal.Mul(bVal, fDenSq)
 
 	if sqrtTerm.Cmp(bVal) <= 0 {
 		return big.NewInt(0)
 	}
 
 	numerator := new(big.Int).Sub(sqrtTerm, bVal)
-	denomPart1 := new(big.Int).Mul(feeNumDen, R3)
-	denomPart2 := new(big.Int).Mul(feeNumSq, R2)
-	denominator := new(big.Int).Add(denomPart1, denomPart2)
+
+	// denom = (fNumDen * rIn2) + (fNumSq * rOut1)
+	d1 := new(big.Int).Mul(fNumDen, rIn2)
+	d2 := new(big.Int).Mul(fNumSq, rOut1)
+	denominator := new(big.Int).Add(d1, d2)
 
 	return new(big.Int).Div(numerator, denominator)
 }
 
-func v2AmountOut(amountIn, resIn, resOut *big.Int) *big.Int {
-	if amountIn.Cmp(big.NewInt(0)) <= 0 {
+// v2AmountOut: Python'daki v2_amount_out fonksiyonunun aynısı
+func v2AmountOut(dx, rx, ry *big.Int) *big.Int {
+	if dx.Sign() <= 0 {
 		return big.NewInt(0)
 	}
+
 	feeNum := big.NewInt(997)
 	feeDen := big.NewInt(1000)
-	amountInWithFee := new(big.Int).Mul(amountIn, feeNum)
-	numerator := new(big.Int).Mul(amountInWithFee, resOut)
-	denominator := new(big.Int).Add(new(big.Int).Mul(resIn, feeDen), amountInWithFee)
-	return new(big.Int).Div(numerator, denominator)
+
+	dxEff := new(big.Int).Mul(dx, feeNum)
+	num := new(big.Int).Mul(dxEff, ry)
+	den := new(big.Int).Add(new(big.Int).Mul(rx, feeDen), dxEff)
+
+	fmt.Println("AmountOut", dx, rx, ry, new(big.Int).Div(num, den))
+
+	return new(big.Int).Div(num, den)
 }
 
-// Python'daki arb_best_two_pools fonksiyonunun Go karşılığı
-func ArbBestTwoPools(A_rx, A_ry, B_rx, B_ry *big.Int) {
-	// 1. Yön: X -> A -> Y -> B -> X (A'dan al, B'de sat)
-	// Pool A: In=X, Out=Y | Pool B: In=Y, Out=X
-	opt1 := OptimalInputExact(A_rx, A_ry, B_ry, B_rx)
-	profit1 := big.NewInt(0)
-	if opt1.Cmp(big.NewInt(0)) > 0 {
-		dy := v2AmountOut(opt1, A_rx, A_ry)
-		xOut := v2AmountOut(dy, B_ry, B_rx)
-		profit1.Sub(xOut, opt1)
+func ArbBestTwoPools(A_rx, A_ry, B_rx, B_ry *big.Int) ArbResult {
+	// EMNİYET KEMERİ: Havuzun en fazla %30'unu kullan (Python max_frac=0.3)
+	maxFracNum := big.NewInt(3)
+	maxFracDen := big.NewInt(10)
+
+	// --- ROTA 1: A -> B ---
+	dx1 := OptimalInputExact(A_rx, A_ry, B_ry, B_rx)
+
+	// Emniyet: dx, A_rx * 0.3'ten büyük olamaz
+	limit1 := new(big.Int).Mul(A_rx, maxFracNum)
+	limit1.Div(limit1, maxFracDen)
+	if dx1.Cmp(limit1) > 0 {
+		dx1.Set(limit1) // Eğer matematik "fazla bas" diyorsa, %30'da durdur.
 	}
 
-	// 2. Yön: X -> B -> Y -> A -> X (B'den al, A'da sat)
-	// Pool B: In=X, Out=Y | Pool A: In=Y, Out=X
-	opt2 := OptimalInputExact(B_rx, B_ry, A_ry, A_rx)
-	profit2 := big.NewInt(0)
-	if opt2.Cmp(big.NewInt(0)) > 0 {
-		dy := v2AmountOut(opt2, B_rx, B_ry)
-		xOut := v2AmountOut(dy, A_ry, A_rx)
-		profit2.Sub(xOut, opt2)
+	p1 := big.NewInt(0)
+	var dy1, out1 *big.Int = big.NewInt(0), big.NewInt(0)
+	if dx1.Sign() > 0 {
+		dy1 = v2AmountOut(dx1, A_rx, A_ry)
+		out1 = v2AmountOut(dy1, B_ry, B_rx)
+		p1.Sub(out1, dx1)
 	}
 
-	// Karşılaştırma
-	if profit1.Cmp(big.NewInt(0)) <= 0 && profit2.Cmp(big.NewInt(0)) <= 0 {
-		fmt.Println("İki yönde de kârlı fırsat yok.")
-		return
+	// --- ROTA 2: B -> A ---
+	dx2 := OptimalInputExact(B_rx, B_ry, A_ry, A_rx)
+
+	// Emniyet: dx, B_rx * 0.3'ten büyük olamaz
+	limit2 := new(big.Int).Mul(B_rx, maxFracNum)
+	limit2.Div(limit2, maxFracDen)
+	if dx2.Cmp(limit2) > 0 {
+		dx2.Set(limit2)
 	}
 
-	if profit1.Cmp(profit2) >= 0 {
-		fmt.Printf("En iyi rota: A -> B | Giriş: %s | Kâr: %s\n", opt1.String(), profit1.String())
-	} else {
-		fmt.Printf("En iyi rota: B -> A | Giriş: %s | Kâr: %s\n", opt2.String(), profit2.String())
+	p2 := big.NewInt(0)
+	var dy2, out2 *big.Int = big.NewInt(0), big.NewInt(0)
+	if dx2.Sign() > 0 {
+		dy2 = v2AmountOut(dx2, B_rx, B_ry)
+		out2 = v2AmountOut(dy2, A_ry, A_rx)
+		p2.Sub(out2, dx2)
 	}
+
+	// En yüksek kârı seç
+	if p1.Cmp(p2) >= 0 && p1.Sign() > 0 {
+		return ArbResult{"A->B", dx1, p1, dy1, out1}
+	} else if p2.Sign() > 0 {
+		return ArbResult{"B->A", dx2, p2, dy2, out2}
+	}
+
+	return ArbResult{"YOK", big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0)}
 }
 
 func FlashSwap(scan models.ScanParams, tradingPairs []models.TradingPair) {
@@ -153,8 +189,8 @@ func FlashSwap(scan models.ScanParams, tradingPairs []models.TradingPair) {
 		}
 
 		fmt.Println("Pair", pair.Address)
-		fmt.Println("Token0Price", pair.Token0Price().ToSignificant(8), price.ToSignificant(8), "TOKEN0:", pair.Token0().Hex())
-		fmt.Println("Token1Price", pair.Token1Price().ToSignificant(8), price.ToSignificant(8), "TOKEN1", pair.Token1().Hex())
+		fmt.Println("Token0Price", pair.Token0Price().ToSignificant(8), "TOKEN0:", pair.Token0().Hex())
+		fmt.Println("Token1Price", pair.Token1Price().ToSignificant(8), "TOKEN1", pair.Token1().Hex())
 
 	}
 
@@ -165,31 +201,43 @@ func FlashSwap(scan models.ScanParams, tradingPairs []models.TradingPair) {
 
 	// cheap
 	if cheapPair.Token0().Address == scan.NativeToken {
-		R1 = cheapPair.Reserve0().Quotient() // CHZ
-		R2 = cheapPair.Reserve1().Quotient() // PEPPER
+		R1 = cheapPair.Reserve0().Raw() // CHZ
+		R2 = cheapPair.Reserve1().Raw() // PEPPER
 	} else {
-		R1 = cheapPair.Reserve1().Quotient()
-		R2 = cheapPair.Reserve0().Quotient()
+		R1 = cheapPair.Reserve1().Raw()
+		R2 = cheapPair.Reserve0().Raw()
 	}
 
 	// expensive
 	if expensivePair.Token0().Address == scan.NativeToken {
-		R4 = expensivePair.Reserve0().Quotient() // CHZ
-		R3 = expensivePair.Reserve1().Quotient() // PEPPER
+		R3 = expensivePair.Reserve0().Raw() // Native Token
+		R4 = expensivePair.Reserve1().Raw() // Diğer token
 	} else {
-		R4 = expensivePair.Reserve1().Quotient()
-		R3 = expensivePair.Reserve0().Quotient()
+		R3 = expensivePair.Reserve1().Raw()
+		R4 = expensivePair.Reserve0().Raw()
 	}
 
-	fmt.Println(R1, R2, R3, R4)
+	fmt.Printf("A_rx = %s\n", R1.String())
+	fmt.Printf("A_ry = %s\n", R2.String())
+	fmt.Printf("B_rx = %s\n", R3.String())
+	fmt.Printf("B_ry = %s\n", R4.String())
 
-	decimals := new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil)
+	res := ArbBestTwoPools(R1, R2, R3, R4)
 
-	A_rx := new(big.Int).Mul(big.NewInt(1000), decimals)
-	A_ry := new(big.Int).Mul(big.NewInt(2_000_000), decimals)
-	B_rx := new(big.Int).Mul(big.NewInt(1200), decimals)
-	B_ry := new(big.Int).Mul(big.NewInt(2_000_000), decimals)
+	// CurrencyAmount oluştur
 
-	ArbBestTwoPools(A_rx, A_ry, B_rx, B_ry)
+	// ToSignificant ile string format
+
+	// mid ve out tokenları da benzer şekilde ilgili token objesi ile sarılmalı
+
+	fmt.Printf("route: %s\n", res.Route)
+	fmt.Printf("dx: %s\n", res.Dx.String())
+	fmt.Printf("dx Ether: %s\n", coreUtils.ToEther(res.Dx))
+	fmt.Printf("profit Ether: %s\n", coreUtils.ToEther(res.Profit))
+
+	fmt.Printf("profit: %s\n", res.Profit.String())
+	fmt.Printf("mid: %s\n", res.Mid.String())
+	fmt.Printf("out: %s\n", res.Out.String())
+	fmt.Printf("out: %s\n", coreUtils.ToEther(res.Out))
 
 }

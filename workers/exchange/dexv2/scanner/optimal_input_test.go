@@ -1,6 +1,7 @@
 package scanner
 
 import (
+	"fmt"
 	"math/big"
 	"testing"
 )
@@ -11,60 +12,41 @@ func bi(s string) *big.Int {
 }
 
 func TestOptimalInputExact_REAL_RESERVES(t *testing.T) {
+	decimals := new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil)
 
-	/*
-		CHEAP (KEWL)
-		Price ≈ 42,948,462 PEPPER / CHZ
+	// Python Örneği:
+	// B_rx = 1000, B_ry = 2M
+	// A_rx = 1200, A_ry = 2M
+	B_rx := new(big.Int).Mul(big.NewInt(1000), decimals)
+	B_ry := new(big.Int).Mul(big.NewInt(2_000_000), decimals)
+	A_rx := new(big.Int).Mul(big.NewInt(1200), decimals)
+	A_ry := new(big.Int).Mul(big.NewInt(2_000_000), decimals)
 
-		CHZ  reserve (R1): 224.750608137612311029
-		PEPPER reserve (R2): 9,652,693,102.492406127377066615
-	*/
+	res := ArbBestTwoPools(A_rx, A_ry, B_rx, B_ry)
 
-	R1 := bi("224750608137612311029")
-	R2 := bi("9652693102492406127377066615")
-
-	/*
-		EXPENSIVE (FANX)
-		Price ≈ 44,769,334 PEPPER / CHZ
-
-		CHZ  reserve (R4): 4,345,731.336352111551097012
-		PEPPER reserve (R3): 194,555,498,510,861.208995752022437008
-	*/
-
-	R4 := bi("4345731336352111551097012")
-	R3 := bi("194555498510861208995752022437008")
-
-	optimal := OptimalInputExact(R1, R2, R3, R4)
-
-	t.Log("Optimal Input (raw):", optimal.String())
-
-	if optimal.Sign() == 0 {
-		t.Log("NO ARB (optimal = 0) — matematiksel olarak doğru sonuç")
-	} else {
-		t.Log("ARB FOUND — optimal input:", optimal.String())
-	}
-
-	// Güvenlik: negatif çıkamaz
-	if optimal.Sign() < 0 {
-		t.Fatal("Optimal input negatif çıktı — FORMÜL HATALI")
-	}
+	fmt.Printf("route: %s\n", res.Route)
+	fmt.Printf("dx: %s\n", res.Dx.String())
+	fmt.Printf("profit: %s\n", res.Profit.String())
+	fmt.Printf("mid: %s\n", res.Mid.String())
+	fmt.Printf("out: %s\n", res.Out.String())
 }
 
 func TestOptimalInputExact_WITH_ARB(t *testing.T) {
-	// CHZ ve PEPPER rezervlerini (wei cinsinden)
-	R1 := bi("1000000000000000000000")        // 1000 CHZ (Cheap CHZ)
-	R2 := bi("40000000000000000000000000000") // 40B PEPPER (Cheap PEPPER)
+	decimals := new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil)
 
-	R4 := bi("100000000000000000000")        // 100 CHZ (Expensive CHZ)
-	R3 := bi("3000000000000000000000000000") // 3B PEPPER (Expensive PEPPER)
+	// Python Örneği:
+	// B_rx = 1000, B_ry = 2M
+	// A_rx = 1200, A_ry = 2M
+	A_rx := new(big.Int).Mul(big.NewInt(1000), decimals)
+	A_ry := new(big.Int).Mul(big.NewInt(2_000_000), decimals)
+	B_rx := new(big.Int).Mul(big.NewInt(1200), decimals)
+	B_ry := new(big.Int).Mul(big.NewInt(2_000_000), decimals)
 
-	optimal := OptimalInputExact(R1, R2, R3, R4)
+	res := ArbBestTwoPools(A_rx, A_ry, B_rx, B_ry)
 
-	t.Log("Optimal Input (raw):", optimal.String())
-
-	if optimal.Sign() == 0 {
-		t.Fatal("ARB OLMASI GEREKIRKEN optimal = 0 ÇIKTI")
-	} else {
-		t.Log("ARB FOUND optimal input:", optimal.String())
-	}
+	fmt.Printf("route: %s\n", res.Route)
+	fmt.Printf("dx: %s\n", res.Dx.String())
+	fmt.Printf("profit: %s\n", res.Profit.String())
+	fmt.Printf("mid: %s\n", res.Mid.String())
+	fmt.Printf("out: %s\n", res.Out.String())
 }

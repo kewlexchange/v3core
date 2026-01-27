@@ -94,3 +94,11 @@ func FormatUnitsBigFloat(amount *big.Float, decimals int) string {
 	res := new(big.Float).Quo(amount, base)
 	return res.Text('f', decimals)
 }
+
+func ToEther(wei *big.Int) string {
+	fwei := new(big.Float).SetInt(wei)
+	// 10^18 (Ether decimals)
+	multiplier := new(big.Float).SetFloat64(math.Pow(10, 18))
+	res := new(big.Float).Quo(fwei, multiplier)
+	return res.Text('f', 18) // 18 ondalık göster
+}

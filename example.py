@@ -43,10 +43,10 @@ def arb_best_two_pools(A_rx, A_ry, B_rx, B_ry, fee=0.003):
     return {"route": "B->A", "dx": dx2, "profit": p2, "mid": dy2, "out": xout2}
 
 def main():
-    A_rx = 1000.0
-    A_ry = 2_000_000.0
-    B_rx = 1200.0
-    B_ry = 2_000_000.0
+    A_rx = 212136067100462734326
+    A_ry = 9110917957724627824604718180
+    B_rx = 195450421701177622615923548048818
+    B_ry = 4326434996208584027910903
     fee = 0.003
     res = arb_best_two_pools(A_rx, A_ry, B_rx, B_ry, fee)
     for k, v in res.items():

@@ -16,10 +16,10 @@ def v2_amount_out(dx, rx, ry, fee=0.003):
     return (dx * diff * ry) / (rx + dx * diff)
 
 def main():
-    A_rx = 1000.0
-    A_ry = 2_000_000.0
-    B_rx = 1200.0
-    B_ry = 2_000_000.0
+    A_rx = 212.136067100462734326
+    A_ry = 9110917957.72462782460471818
+    B_rx = 194372075082911348076105015.124099
+    B_ry = 4350364.3989495884647906
     fee = 0.003
 
     best_dx = calculate_optimal_dx(A_rx, A_ry, B_ry, B_rx, fee)
@@ -29,10 +29,10 @@ def main():
         x_out = v2_amount_out(dy, B_ry, B_rx, fee)
         profit = x_out - best_dx
         
-        print(f"Optimal Giriş (dx): {best_dx:.18f}")
-        print(f"Ara Token (dy): {dy:.18f}")
-        print(f"Final Çıkış (x_out): {x_out:.18f}")
-        print(f"Maksimum Kâr: {profit:.18f}")
+        print(f"Optimal Giriş (dx): {best_dx}")
+        print(f"Ara Token (dy): {dy}")
+        print(f"Final Çıkış (x_out): {x_out}")
+        print(f"Maksimum Kâr: {profit}")
     else:
         print("Kârlı bir arbitraj fırsatı bulunamadı.")
 
