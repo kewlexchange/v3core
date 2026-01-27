@@ -32,6 +32,7 @@ func main() {
 
 	scanParams := []models.ScanParams{
 		chiliz.GetPEPPER(),
+		chiliz.GetCHZINU(),
 	}
 	dexService.ScanPairs(scanParams)
 	//dexService.FetchPairsConcurrent(constants.DEXExchanges)

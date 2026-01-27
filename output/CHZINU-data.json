@@ -1,0 +1,64 @@
+[
+  {
+    "BaseCurrency": {
+      "Symbol": "",
+      "Decimals": 18,
+      "Contract": "0x677f7e16c7dd57be1d4c8ad1244883214953dc47"
+    },
+    "QuoteCurrency": {
+      "Symbol": "",
+      "Decimals": 4,
+      "Contract": "0xf3928e7871eb136dd6648ad08aeef6b6ea893001"
+    },
+    "Pair": "0xf9168b29f8534a449b7eb796fac8c60fcaed5af0",
+    "Base": "0x677F7e16C7Dd57be1D4C8aD1244883214953DC47",
+    "Quote": "0xF3928e7871eb136DD6648Ad08aEEF6B6ea893001",
+    "BasePrice": "4731.538796162056633287",
+    "QuotePrice": "0.000211347733386682",
+    "BasePriceUSD": null,
+    "QuotePriceUSD": null,
+    "BasePriceNative": null,
+    "QuotePriceNative": null,
+    "BaseReserve": 274366488770567208633145,
+    "QuoteReserve": 12981756859847,
+    "BaseReserveStr": "274366.488770567208633145",
+    "QuoteReserveStr": "1298175685.9847",
+    "BaseDecimals": 18,
+    "QuoteDecimals": 4,
+    "Symbol": "",
+    "DisplayName": null,
+    "Logo": null,
+    "IsEnabled": true
+  },
+  {
+    "BaseCurrency": {
+      "Symbol": "",
+      "Decimals": 18,
+      "Contract": "0x677f7e16c7dd57be1d4c8ad1244883214953dc47"
+    },
+    "QuoteCurrency": {
+      "Symbol": "",
+      "Decimals": 4,
+      "Contract": "0xf3928e7871eb136dd6648ad08aeef6b6ea893001"
+    },
+    "Pair": "0xf4a49ce9f40d1818b81321f54371a245a98a8618",
+    "Base": "0x677F7e16C7Dd57be1D4C8aD1244883214953DC47",
+    "Quote": "0xF3928e7871eb136DD6648Ad08aEEF6B6ea893001",
+    "BasePrice": "4748.1017994592002809",
+    "QuotePrice": "0.000210610480195243",
+    "BasePriceUSD": null,
+    "QuotePriceUSD": null,
+    "BasePriceNative": null,
+    "QuotePriceNative": null,
+    "BaseReserve": 15983137822749225057051,
+    "QuoteReserve": 758895654572,
+    "BaseReserveStr": "15983.137822749225057051",
+    "QuoteReserveStr": "75889565.4572",
+    "BaseDecimals": 18,
+    "QuoteDecimals": 4,
+    "Symbol": "",
+    "DisplayName": null,
+    "Logo": null,
+    "IsEnabled": true
+  }
+]

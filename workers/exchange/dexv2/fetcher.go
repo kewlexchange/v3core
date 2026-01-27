@@ -219,5 +219,6 @@ abigen --abi=workers/exchange/dexv2/abis/v2Factory.abi --pkg=v2Factory --out=wor
 abigen --abi=workers/exchange/dexv2/abis/multicall3.abi --pkg=multicall3  --out=workers/exchange/dexv2/contracts/multicall3/multicall3.go
 abigen --abi=workers/exchange/dexv2/abis/v2Pair.abi --pkg=v2Pair --out=workers/exchange/dexv2/contracts/v2Pair/v2Pair.go
 abigen --abi=workers/exchange/dexv2/abis/kewl.abi --pkg=kewl --out=workers/exchange/dexv2/contracts/kewl/kewl.go
+abigen --abi=workers/exchange/dexv2/abis/flash.abi --pkg=flash --out=workers/exchange/dexv2/contracts/flash/flash.go
 
 */
