@@ -50,9 +50,9 @@ var DEXExchanges = []models.Exchange{
 	},
 }
 
-func GetExchangeByName(name string) (*models.Exchange, error) {
+func GetExchangeByName(name string, chainId int64) (*models.Exchange, error) {
 	for i := range DEXExchanges {
-		if DEXExchanges[i].Name == name {
+		if DEXExchanges[i].Name == name && *DEXExchanges[i].ChainID == chainId {
 			return &DEXExchanges[i], nil
 		}
 	}

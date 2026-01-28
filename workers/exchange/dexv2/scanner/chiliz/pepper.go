@@ -20,6 +20,7 @@ func GetPepperPairs() (pairs []models.TradingPair) {
 
 func GetPEPPER() (token models.ScanParams) {
 	return models.ScanParams{
+		ChainID:     88888,
 		Token:       "PEPPER",
 		NativeToken: *utils.AddressFromHex("0x677F7e16C7Dd57be1D4C8aD1244883214953DC47"),
 		Pairs:       GetPepperPairs(),

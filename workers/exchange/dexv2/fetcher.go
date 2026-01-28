@@ -5,19 +5,24 @@ import (
 	"core/constants"
 	"core/models"
 	"core/services"
+	coreTypes "core/types"
 	"core/utils"
+	"core/workers/exchange/dexv2/contracts/flash"
 	"core/workers/exchange/dexv2/contracts/kewl"
 	"core/workers/exchange/dexv2/contracts/multicall3"
 	"core/workers/exchange/dexv2/contracts/v2Factory"
+	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
 	"log"
 	"math/big"
+	"os"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/shopspring/decimal"
 )
 
@@ -108,7 +113,7 @@ func (d *DexV2Fetcher) FetchPairs(ex models.Exchange) ([]models.TradingPair, err
 
 	log.Printf("[DEX Fetcher] fetched %d pairs for %s", len(pairs), ex.Name)
 
-	pairs, err = d.FetchReserves(pairs)
+	pairs, err = d.FetchReserves(*ex.ChainID, pairs)
 	return pairs, err
 }
 
@@ -148,9 +153,9 @@ func (d *DexV2Fetcher) CalculatePrices(reserveBase, reserveQuote, decimalsBase, 
 	return priceBase, priceQuote, nil
 }
 
-func (d *DexV2Fetcher) FetchReserves(pairs []models.TradingPair) ([]models.TradingPair, error) {
+func (d *DexV2Fetcher) FetchReserves(chainId int64, pairs []models.TradingPair) ([]models.TradingPair, error) {
 
-	kewlInfo, _ := constants.GetExchangeByName("KEWL")
+	kewlInfo, _ := constants.GetExchangeByName("KEWL", chainId)
 	evmClient, err := services.GetEVMClient(*kewlInfo.ChainID, *kewlInfo.RPC)
 	if err != nil {
 		return nil, err
@@ -212,6 +217,131 @@ func (d *DexV2Fetcher) FetchReserves(pairs []models.TradingPair) ([]models.Tradi
 	}
 
 	return pairs, nil
+}
+
+func (d *DexV2Fetcher) ExecuteSwap(chainId int64, params coreTypes.ArbResult) error {
+
+	if !params.Exists {
+		return nil
+	}
+
+	flashContract := utils.AddressFromHex("0x48b68970abC5de47c6B0526f704b8A95eFeF8aF8")
+	privateKeyHex := os.Getenv("PRIVATE_KEY")
+	if privateKeyHex == "" {
+		fmt.Println("PRIVATE_KEY env variable is not set")
+		return fmt.Errorf("Invalid Private Key")
+	}
+
+	evmClient := services.Clients[chainId]
+
+	flashSwap, err := flash.NewFlash(*flashContract, evmClient)
+	if err != nil {
+		fmt.Println("Err1", err)
+		return err
+	}
+
+	privateKey, err := crypto.HexToECDSA(strings.TrimPrefix(privateKeyHex, "0x"))
+	if err != nil {
+		fmt.Println("Err2", err)
+		return err
+	}
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA := publicKey.(*ecdsa.PublicKey)
+	from := crypto.PubkeyToAddress(*publicKeyECDSA)
+
+	nonce, err := evmClient.PendingNonceAt(context.Background(), from)
+	if err != nil {
+		fmt.Println("Err3", err)
+
+		return err
+	}
+
+	gasPrice, err := evmClient.SuggestGasPrice(context.Background())
+	if err != nil {
+		return err
+	}
+
+	chainID := big.NewInt(chainId)
+
+	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, chainID)
+	if err != nil {
+		return err
+	}
+
+	auth.From = from
+	auth.Nonce = big.NewInt(int64(nonce))
+	auth.Value = big.NewInt(0)
+
+	// 🔥 SENİN VERDİĞİN TX’E GÖRE
+	auth.GasLimit = 0 // uint64(2_600_000)
+	auth.GasPrice = gasPrice
+
+	flashParams := flash.SwapFlashParams{
+
+		DX:     params.Dx,
+		Profit: params.Profit,
+		Mid:    params.Mid,
+		Out:    params.Out,
+		Borrow: params.Borrow,
+		Output: params.Repay,
+		Path:   params.Path,
+	}
+
+	/*
+		// ethclient, rpcClient ile sarmalanmış
+		ethClient := ethclient.NewClient(evmClient.Client())
+
+		parsedABI, err := abi.JSON(strings.NewReader(flash.FlashABI))
+		if err != nil {
+			log.Fatalf("Failed to parse ABI: %v", err)
+		}
+
+		// 2. handleFlash fonksiyonunu bul
+		method := parsedABI.Methods["handleFlash"]
+
+		// 4. Parametreleri encode et
+		encodedParams, err := method.Inputs.Pack(flashParams)
+		if err != nil {
+			log.Fatalf("Failed to pack params: %v", err)
+		}
+		data := append(method.ID, encodedParams...)
+
+		msg := ethereum.CallMsg{
+			To:   &common.Address{},
+			Data: data,
+		}
+
+
+		result, err := ethClient.CallContract(context.Background(), msg, nil)
+		if err != nil {
+			log.Fatalf("CallContract error: %v", err)
+		}
+
+		log.Printf("Result: %x", result)
+
+		fmt.Println("eth_call result:", result)
+	*/
+	fmt.Println("DX", params.Dx)
+	fmt.Println("Mid", params.Mid)
+	fmt.Println("Out", params.Out)
+	fmt.Println("Borrow", params.Borrow)
+	fmt.Println("Repay", params.Repay)
+	fmt.Println("Pair0", params.Path[0].Hex())
+	fmt.Println("Pair1", params.Path[1].Hex())
+	// 🔥 FLASH SWAP TETİKLENİYOR
+
+	tx, err := flashSwap.HandleFlash(auth, flashParams)
+	if err != nil {
+		fmt.Println("Coder4", err)
+
+		return err
+	}
+
+	fmt.Println("🚀 FlashSwap TX:", tx.Hash().Hex())
+	return nil
+
+	//flashSwap.HandleFlash()
 }
 
 /*

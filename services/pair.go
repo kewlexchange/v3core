@@ -2,6 +2,7 @@ package services
 
 import (
 	"core/models"
+	coreTypes "core/types"
 	"core/workers"
 	exchange "core/workers/exchange"
 	"core/workers/exchange/dexv2/scanner"
@@ -144,19 +145,24 @@ func (s *PairService) FetchPairsConcurrent(exchanges []models.Exchange) {
 	s.SaveJSONToFile("output", "all_exchanges", allPairs)
 }
 
-func (s *PairService) ScanPairs(params []models.ScanParams) {
+func (s *PairService) Arbitrage(params *coreTypes.ArbResult) {
+	s.fetcher.ExecuteSwap(88888, *params)
+}
+
+func (s *PairService) ScanPairs(chainId int64, params []models.ScanParams) {
 	allPairs := []models.TradingPair{} // veya pairs'in tipi neyse onu kullan
 
 	for _, param := range params {
 		fmt.Println("Scanner", param.Token)
 
-		pairs, err := s.fetcher.FetchReserves(param.Pairs)
+		pairs, err := s.fetcher.FetchReserves(chainId, param.Pairs)
 		if err != nil {
 			log.Printf("error fetching for %s: %v", param.Token, err)
 			return
 		}
 		allPairs = append(allPairs, pairs...)
-		scanner.FlashSwap(param, pairs)
+		res := scanner.FlashSearch(chainId, param, pairs)
+		s.Arbitrage(res)
 		s.SaveJSONToFile("output", param.Token, pairs)
 	}
 }

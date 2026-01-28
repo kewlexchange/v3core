@@ -4,6 +4,7 @@ import (
 	"core/models"
 	uniswapSDKConstants "core/sdk/uniswap/constants"
 	uniswapSDKEntities "core/sdk/uniswap/entities"
+	coreTypes "core/types"
 	coreUtils "core/utils"
 	"fmt"
 	"math/big"
@@ -22,15 +23,6 @@ func GetPrice(nativeCurrency common.Address, pair *uniswapSDKEntities.Pair) *uni
 		price = pair.Token1Price()
 	}
 	return price
-}
-
-type ArbResult struct {
-	Exists bool
-	Route  string
-	Dx     *big.Int
-	Profit *big.Int
-	Mid    *big.Int
-	Out    *big.Int
 }
 
 func OptimalInputExact(rIn1, rOut1, rIn2, rOut2 *big.Int) *big.Int {
@@ -76,9 +68,6 @@ func v2AmountOut(dx, rx, ry *big.Int) *big.Int {
 	dxEff := new(big.Int).Mul(dx, feeNum)
 	num := new(big.Int).Mul(dxEff, ry)
 	den := new(big.Int).Add(new(big.Int).Mul(rx, feeDen), dxEff)
-
-	fmt.Println("AmountOut", dx, rx, ry, new(big.Int).Div(num, den))
-
 	return new(big.Int).Div(num, den)
 }
 
@@ -108,7 +97,7 @@ func PriceImpact(dx, rx, ry *big.Int) *uniswapSDKEntities.Percent {
 	return uniswapSDKEntities.NewPercent(ratioInt, big.NewInt(scale))
 }
 
-func ArbBestTwoPools(A_rx, A_ry, B_rx, B_ry *big.Int) ArbResult {
+func ArbBestTwoPools(A_rx, A_ry, B_rx, B_ry *big.Int) coreTypes.ArbResult {
 	maxFracNum := big.NewInt(3)
 	maxFracDen := big.NewInt(10)
 	dx1 := OptimalInputExact(A_rx, A_ry, B_ry, B_rx)
@@ -122,6 +111,7 @@ func ArbBestTwoPools(A_rx, A_ry, B_rx, B_ry *big.Int) ArbResult {
 	var dy1, out1 *big.Int = big.NewInt(0), big.NewInt(0)
 	if dx1.Sign() > 0 {
 		dy1 = v2AmountOut(dx1, A_rx, A_ry)
+
 		out1 = v2AmountOut(dy1, B_ry, B_rx)
 		p1.Sub(out1, dx1)
 	}
@@ -143,17 +133,17 @@ func ArbBestTwoPools(A_rx, A_ry, B_rx, B_ry *big.Int) ArbResult {
 	}
 
 	if p1.Cmp(p2) >= 0 && p1.Sign() > 0 {
-		return ArbResult{Exists: true, Route: "A->B", Dx: dx1, Profit: p1, Mid: dy1, Out: out1}
+		return coreTypes.ArbResult{Exists: true, Side: true, Route: "CHEAP->EXPENSIVE", Dx: dx1, Profit: p1, Mid: dy1, Out: out1}
 		//return ArbResult{"A->B", dx1, p1, dy1, out1}
 	} else if p2.Sign() > 0 {
-		return ArbResult{Exists: true, Route: "B->A", Dx: dx2, Profit: p2, Mid: dy2, Out: out2}
+		return coreTypes.ArbResult{Exists: true, Side: false, Route: "EXPENSIVE->CHEAP", Dx: dx2, Profit: p2, Mid: dy2, Out: out2}
 		//return ArbResult{"B->A", dx2, p2, dy2, out2}
 	}
 
-	return ArbResult{Exists: false, Route: "", Dx: big.NewInt(0), Profit: big.NewInt(0), Out: big.NewInt(0)}
+	return coreTypes.ArbResult{Exists: false, Side: false, Route: "", Dx: big.NewInt(0), Profit: big.NewInt(0), Mid: big.NewInt(0), Out: big.NewInt(0)}
 }
 
-func FlashSwap(scan models.ScanParams, tradingPairs []models.TradingPair) {
+func FlashSearch(chainId int64, scan models.ScanParams, tradingPairs []models.TradingPair) *coreTypes.ArbResult {
 
 	var cheapPair *uniswapSDKEntities.Pair
 	var cheapPrice *uniswapSDKEntities.Price
@@ -172,7 +162,7 @@ func FlashSwap(scan models.ScanParams, tradingPairs []models.TradingPair) {
 
 		if token0Err != nil || token1Err != nil {
 			fmt.Println("Token0 ya da Token1 hatali")
-			return
+			return nil
 		}
 
 		tokenAmount0, tokenAmount0Err := uniswapSDKEntities.NewTokenAmount(token0, tradingPair.BaseReserve)
@@ -180,13 +170,13 @@ func FlashSwap(scan models.ScanParams, tradingPairs []models.TradingPair) {
 
 		if tokenAmount0Err != nil || tokenAmount1Err != nil {
 			fmt.Println("tokenAmount0Err ya da tokenAmount1Err hatali")
-			return
+			return nil
 		}
 
 		pair, pairErr := uniswapSDKEntities.NewPair(tokenAmount0, tokenAmount1, &tradingPair.Pair)
 		if pairErr != nil {
 			fmt.Println("pairErr hatali")
-			return
+			return nil
 		}
 
 		price := GetPrice(scan.NativeToken, pair)
@@ -203,14 +193,11 @@ func FlashSwap(scan models.ScanParams, tradingPairs []models.TradingPair) {
 			expensivePrice = price
 		}
 
-		fmt.Println("Pair", pair.Address)
-		fmt.Println("Token0Price", pair.Token0Price().ToSignificant(8), "TOKEN0:", pair.Token0().Hex())
-		fmt.Println("Token1Price", pair.Token1Price().ToSignificant(8), "TOKEN1", pair.Token1().Hex())
+		fmt.Println("\t PAIR", pair.Address, pair.Token0Price().ToSignificant(8), pair.Token1Price().ToSignificant(8))
 
 	}
 
-	fmt.Println("CHEAP PRICE", cheapPrice.ToSignificant(8), cheapPair.Address.Hex())
-	fmt.Println("EXPENSIVE PRICE", expensivePrice.ToSignificant(8), expensivePair.Address.Hex())
+	fmt.Println("\t PRICE", cheapPrice.ToSignificant(8), cheapPair.Address.Hex(), expensivePrice.ToSignificant(8), expensivePair.Address.Hex())
 
 	var R1, R2, R3, R4 *big.Int
 
@@ -233,20 +220,49 @@ func FlashSwap(scan models.ScanParams, tradingPairs []models.TradingPair) {
 	}
 
 	res := ArbBestTwoPools(R1, R2, R3, R4)
-	if !res.Exists {
-		fmt.Println("Arbitrage Not Found")
-		return
-	}
-	fmt.Printf("route: %s\n", res.Route)
-	fmt.Printf("dx Ether: %s\n", coreUtils.ToEther(res.Dx))
-	fmt.Printf("profit Ether: %s\n", coreUtils.ToEther(res.Profit))
-	fmt.Printf("mid: %s\n", coreUtils.ToEther(res.Mid))
-	fmt.Printf("out: %s\n", coreUtils.ToEther(res.Out))
 
+	fmt.Printf("ROTA: %s IN: %s PROFIT: %s MID: %s OUT: %s \n", res.Route, coreUtils.ToEther(res.Dx), coreUtils.ToEther(res.Profit), coreUtils.ToEther(res.Mid), coreUtils.ToEther(res.Out))
 	priceImpactA := PriceImpact(res.Dx, R1, R2)
 	priceImpactB := PriceImpact(res.Dx, R3, R4)
 
-	fmt.Printf("Price Impact on Pool A: %s\n", priceImpactA.ToFixed(2))
-	fmt.Printf("Price Impact on Pool B: %s\n", priceImpactB.ToFixed(2))
+	fmt.Printf("Price Impact on Pool A: %s B: %s \n", priceImpactA.ToFixed(2), priceImpactB.ToFixed(2))
+
+	fmt.Println("MID : ", res.Mid.String())
+
+	// SIDE = EN COK HANGISI VERIYOR ANLAMINA GELIYOR
+	if res.Side == true {
+
+		if cheapPair.Token0().Address == scan.NativeToken {
+			res.Borrow = common.Address(cheapPair.Token1().Address)
+			res.Repay = common.Address(cheapPair.Token0().Address)
+		} else {
+			res.Borrow = common.Address(cheapPair.Token0().Address)
+			res.Repay = common.Address(cheapPair.Token1().Address)
+		}
+
+		res.Path = []common.Address{
+			*cheapPair.Address,
+			*expensivePair.Address,
+		}
+	} else {
+
+		if expensivePair.Token0().Address == scan.NativeToken {
+			res.Borrow = common.Address(expensivePair.Token1().Address)
+			res.Repay = common.Address(expensivePair.Token0().Address)
+		} else {
+			res.Borrow = common.Address(expensivePair.Token0().Address)
+			res.Repay = common.Address(expensivePair.Token1().Address)
+		}
+
+		res.Path = []common.Address{
+			*expensivePair.Address,
+			*cheapPair.Address,
+		}
+	}
+
+	fmt.Printf("BORROW %s  %s\n", res.Path[0].Hex(), res.Mid.String())
+	fmt.Printf("REPAY %s \n", res.Path[1].Hex())
+
+	return &res
 
 }

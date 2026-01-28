@@ -8,14 +8,14 @@ import (
 
 var (
 	clientsMu sync.Mutex
-	clients   = make(map[int64]*ethclient.Client)
+	Clients   = make(map[int64]*ethclient.Client)
 )
 
 func GetEVMClient(chainID int64, rpcURL string) (*ethclient.Client, error) {
 	clientsMu.Lock()
 	defer clientsMu.Unlock()
 
-	if client, exists := clients[chainID]; exists {
+	if client, exists := Clients[chainID]; exists {
 		return client, nil
 	}
 
@@ -24,6 +24,6 @@ func GetEVMClient(chainID int64, rpcURL string) (*ethclient.Client, error) {
 		return nil, err
 	}
 
-	clients[chainID] = client
+	Clients[chainID] = client
 	return client, nil
 }
