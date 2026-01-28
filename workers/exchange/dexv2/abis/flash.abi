@@ -415,6 +415,34 @@
           "type": "bytes"
         }
       ],
+      "name": "BiswapCall",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount0",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount1",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
+        }
+      ],
       "name": "KayenCall",
       "outputs": [],
       "stateMutability": "nonpayable",
@@ -568,6 +596,112 @@
       "name": "handleSwap",
       "outputs": [],
       "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "dX",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "profit",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "mid",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "out",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "borrow",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "output",
+              "type": "address"
+            },
+            {
+              "internalType": "address[]",
+              "name": "path",
+              "type": "address[]"
+            }
+          ],
+          "internalType": "struct Swap.FlashParams[]",
+          "name": "flashParams",
+          "type": "tuple[]"
+        }
+      ],
+      "name": "handleSwapEx",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount0",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount1",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
+        }
+      ],
+      "name": "jetswapCall",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount0",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount1",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
+        }
+      ],
+      "name": "pancakeCall",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {

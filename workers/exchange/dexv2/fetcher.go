@@ -278,7 +278,6 @@ func (d *DexV2Fetcher) ExecuteSwap(chainId models.ChainID, params coreTypes.ArbR
 	auth.Nonce = big.NewInt(int64(nonce))
 	auth.Value = big.NewInt(0)
 
-	// 🔥 SENİN VERDİĞİN TX’E GÖRE
 	auth.GasLimit = 0 // uint64(2_600_000)
 	auth.GasPrice = gasPrice
 
@@ -293,6 +292,11 @@ func (d *DexV2Fetcher) ExecuteSwap(chainId models.ChainID, params coreTypes.ArbR
 		Path:   params.Path,
 	}
 
+	if !tryLockFlash(flashParams) {
+		fmt.Println("Daha once islendi...")
+		return nil
+	}
+	defer unlockFlash(flashParams)
 	/*
 		// ethclient, rpcClient ile sarmalanmış
 		ethClient := ethclient.NewClient(evmClient.Client())
@@ -334,9 +338,97 @@ func (d *DexV2Fetcher) ExecuteSwap(chainId models.ChainID, params coreTypes.ArbR
 	fmt.Println("Repay", params.Repay)
 	fmt.Println("Pair0", params.Path[0].Hex())
 	fmt.Println("Pair1", params.Path[1].Hex())
-	//FLASH TETİKLENİYOR
 
 	tx, err := flashSwap.HandleSwap(auth, flashParams)
+	if err != nil {
+		fmt.Println("Coder4", err)
+
+		return err
+	}
+
+	fmt.Println("Flash TX:", tx.Hash().Hex())
+	return nil
+
+	//flashSwap.HandleFlash()
+}
+
+func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes.ArbResult) error {
+
+	if chainId == constants.BSCChainId {
+		fmt.Println("BSC")
+		return nil
+	}
+
+	flashContract := constants.FlashContractMap[models.ChainID(chainId)]
+	privateKeyHex := os.Getenv("PRIVATE_KEY")
+	if privateKeyHex == "" {
+		fmt.Println("PRIVATE_KEY env variable is not set")
+		return fmt.Errorf("Invalid Private Key")
+	}
+
+	evmClient := services.Clients[chainId]
+
+	flashSwap, err := flash.NewFlash(flashContract, evmClient)
+	if err != nil {
+		fmt.Println("Err1", err)
+		return err
+	}
+
+	privateKey, err := crypto.HexToECDSA(strings.TrimPrefix(privateKeyHex, "0x"))
+	if err != nil {
+		fmt.Println("Err2", err)
+		return err
+	}
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA := publicKey.(*ecdsa.PublicKey)
+	from := crypto.PubkeyToAddress(*publicKeyECDSA)
+
+	nonce, err := evmClient.PendingNonceAt(context.Background(), from)
+	if err != nil {
+		fmt.Println("Err3", err)
+
+		return err
+	}
+
+	gasPrice, err := evmClient.SuggestGasPrice(context.Background())
+	if err != nil {
+		return err
+	}
+
+	chainID := big.NewInt(chainId.Int64())
+	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, chainID)
+	if err != nil {
+		return err
+	}
+
+	auth.From = from
+	auth.Nonce = big.NewInt(int64(nonce))
+	auth.Value = big.NewInt(0)
+
+	// 🔥 SENİN VERDİĞİN TX’E GÖRE
+	auth.GasLimit = 0 // uint64(2_600_000)
+	auth.GasPrice = gasPrice
+
+	allSwapParams := []flash.SwapFlashParams{}
+
+	for _, param := range params {
+		if !param.Exists {
+			continue
+		}
+		flashParams := flash.SwapFlashParams{
+			DX:     param.Dx,
+			Profit: param.Profit,
+			Mid:    param.Mid,
+			Out:    param.Out,
+			Borrow: param.Borrow,
+			Output: param.Repay,
+			Path:   param.Path,
+		}
+		allSwapParams = append(allSwapParams, flashParams)
+
+	}
+	tx, err := flashSwap.HandleSwapEx(auth, allSwapParams)
 	if err != nil {
 		fmt.Println("Coder4", err)
 

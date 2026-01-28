@@ -149,9 +149,11 @@ func (s *PairService) Arbitrage(chainId models.ChainID, params *coreTypes.ArbRes
 	s.fetcher.ExecuteSwap(chainId, *params)
 }
 
-func (s *PairService) ScanPairs(chainId models.ChainID, params []models.ScanParams) {
-	allPairs := []models.TradingPair{} // veya pairs'in tipi neyse onu kullan
+func (s *PairService) ArbitrageAll(chainId models.ChainID, params *[]coreTypes.ArbResult) {
+	s.fetcher.ExecuteSwapAll(chainId, *params)
+}
 
+func (s *PairService) ScanPairSwapSingle(chainId models.ChainID, params []models.ScanParams) {
 	for _, param := range params {
 		fmt.Println("Scanner", param.Token, chainId)
 
@@ -160,9 +162,28 @@ func (s *PairService) ScanPairs(chainId models.ChainID, params []models.ScanPara
 			log.Printf("error fetching for %s: %v", param.Token, err)
 			return
 		}
-		allPairs = append(allPairs, pairs...)
 		res := scanner.FlashSearch(chainId, param, pairs)
 		s.Arbitrage(chainId, res)
-		s.SaveJSONToFile("output", param.Token, pairs)
 	}
+}
+
+func (s *PairService) ScanPairsSwapAll(chainId models.ChainID, params []models.ScanParams) {
+
+	allSwapParams := []coreTypes.ArbResult{}
+	for _, param := range params {
+		fmt.Println("Scanner", param.Token, chainId)
+
+		pairs, err := s.fetcher.FetchReserves(chainId, param.Pairs)
+		if err != nil {
+			log.Printf("error fetching for %s: %v", param.Token, err)
+			return
+		}
+		res := scanner.FlashSearch(chainId, param, pairs)
+		if res != nil {
+			if res.Exists {
+				allSwapParams = append(allSwapParams, *res)
+			}
+		}
+	}
+	s.ArbitrageAll(chainId, &allSwapParams)
 }

@@ -221,7 +221,7 @@ func FlashSearch(chainId models.ChainID, scan models.ScanParams, tradingPairs []
 
 	res := ArbBestTwoPools(R1, R2, R3, R4)
 
-	fmt.Printf("ROTA: %s IN: %s PROFIT: %s MID: %s OUT: %s \n", res.Route, coreUtils.ToEther(res.Dx), coreUtils.ToEther(res.Profit), coreUtils.ToEther(res.Mid), coreUtils.ToEther(res.Out))
+	fmt.Printf("ROUTE: %s IN: %s PROFIT: %s MID: %s OUT: %s \n", res.Route, coreUtils.ToEther(res.Dx), coreUtils.ToEther(res.Profit), coreUtils.ToEther(res.Mid), coreUtils.ToEther(res.Out))
 	priceImpactA := PriceImpact(res.Dx, R1, R2)
 	priceImpactB := PriceImpact(res.Dx, R3, R4)
 
@@ -258,6 +258,7 @@ func FlashSearch(chainId models.ChainID, scan models.ScanParams, tradingPairs []
 			*expensivePair.Address,
 			*cheapPair.Address,
 		}
+
 	}
 
 	fmt.Printf("BORROW %s  %s\n", res.Path[0].Hex(), res.Mid.String())
