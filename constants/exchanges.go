@@ -8,9 +8,9 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-var ChilizChainId = int64(models.Chiliz)
+var ChilizChainId = models.Chiliz
 var ChilizChain = models.ChainInfoMap[models.Chiliz]
-var BSCChainId = int64(models.BSC)
+var BSCChainId = models.BSC
 var BSCChain = models.ChainInfoMap[models.BSC]
 
 var DEXExchanges = []models.Exchange{
@@ -86,7 +86,7 @@ var FlashContractMap = map[models.ChainID]common.Address{
 	models.Chiliz: common.HexToAddress("0x48b68970abC5de47c6B0526f704b8A95eFeF8aF8"),
 }
 
-func GetExchangeByName(name string, chainId int64) (*models.Exchange, error) {
+func GetExchangeByName(name string, chainId models.ChainID) (*models.Exchange, error) {
 	for i := range DEXExchanges {
 		if DEXExchanges[i].Name == name && *DEXExchanges[i].ChainID == chainId {
 			return &DEXExchanges[i], nil

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"core/models"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -8,10 +9,10 @@ import (
 
 var (
 	clientsMu sync.Mutex
-	Clients   = make(map[int64]*ethclient.Client)
+	Clients   = make(map[models.ChainID]*ethclient.Client)
 )
 
-func GetEVMClient(chainID int64, rpcURL string) (*ethclient.Client, error) {
+func GetEVMClient(chainID models.ChainID, rpcURL string) (*ethclient.Client, error) {
 	clientsMu.Lock()
 	defer clientsMu.Unlock()
 

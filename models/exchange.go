@@ -71,13 +71,17 @@ type Exchange struct {
 	Multicall3  *common.Address `gorm:"type:bytea"`
 	StablePair  *common.Address `gorm:"type:bytea"`
 
-	ChainID    *int64  `gorm:"type:bigint"`
-	Explorer   *string `gorm:"type:text"`
-	Background *string `gorm:"type:text"`
-	Foreground *string `gorm:"type:text"`
-	Logo       *string `gorm:"type:text"`
+	ChainID    *ChainID `gorm:"type:bigint"`
+	Explorer   *string  `gorm:"type:text"`
+	Background *string  `gorm:"type:text"`
+	Foreground *string  `gorm:"type:text"`
+	Logo       *string  `gorm:"type:text"`
 
 	IsEnabled bool `gorm:"default:true"`
+}
+
+func (c ChainID) Int64() int64 {
+	return int64(c)
 }
 
 func (Exchange) TableName() string {

@@ -153,7 +153,7 @@ func (d *DexV2Fetcher) CalculatePrices(reserveBase, reserveQuote, decimalsBase, 
 	return priceBase, priceQuote, nil
 }
 
-func (d *DexV2Fetcher) FetchReserves(chainId int64, pairs []models.TradingPair) ([]models.TradingPair, error) {
+func (d *DexV2Fetcher) FetchReserves(chainId models.ChainID, pairs []models.TradingPair) ([]models.TradingPair, error) {
 
 	fmt.Println("FetchReserves", chainId)
 	kewlInfo, _ := constants.GetExchangeByName("KEWL", chainId)
@@ -220,7 +220,7 @@ func (d *DexV2Fetcher) FetchReserves(chainId int64, pairs []models.TradingPair) 
 	return pairs, nil
 }
 
-func (d *DexV2Fetcher) ExecuteSwap(chainId int64, params coreTypes.ArbResult) error {
+func (d *DexV2Fetcher) ExecuteSwap(chainId models.ChainID, params coreTypes.ArbResult) error {
 
 	if !params.Exists {
 		return nil
@@ -268,8 +268,7 @@ func (d *DexV2Fetcher) ExecuteSwap(chainId int64, params coreTypes.ArbResult) er
 		return err
 	}
 
-	chainID := big.NewInt(chainId)
-
+	chainID := big.NewInt(chainId.Int64())
 	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, chainID)
 	if err != nil {
 		return err

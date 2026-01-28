@@ -13,7 +13,7 @@ type Currency struct {
 	Name       string    `gorm:"type:text"  json:"-"`
 	Decimals   *big.Int
 	Contract   *common.Address `gorm:"type:bytea"`
-	ChainID    *int64          `gorm:"type:bigint"  json:"-"`
+	ChainID    *ChainID        `gorm:"type:bigint"  json:"-"`
 	Logo       *string         `gorm:"type:text"  json:"-"`
 	Background *string         `gorm:"type:text" json:"-" `
 	Foreground *string         `gorm:"type:text" json:"-"`

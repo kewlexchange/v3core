@@ -145,11 +145,11 @@ func (s *PairService) FetchPairsConcurrent(exchanges []models.Exchange) {
 	s.SaveJSONToFile("output", "all_exchanges", allPairs)
 }
 
-func (s *PairService) Arbitrage(params *coreTypes.ArbResult) {
-	s.fetcher.ExecuteSwap(88888, *params)
+func (s *PairService) Arbitrage(chainId models.ChainID, params *coreTypes.ArbResult) {
+	s.fetcher.ExecuteSwap(chainId, *params)
 }
 
-func (s *PairService) ScanPairs(chainId int64, params []models.ScanParams) {
+func (s *PairService) ScanPairs(chainId models.ChainID, params []models.ScanParams) {
 	allPairs := []models.TradingPair{} // veya pairs'in tipi neyse onu kullan
 
 	for _, param := range params {
@@ -162,7 +162,7 @@ func (s *PairService) ScanPairs(chainId int64, params []models.ScanParams) {
 		}
 		allPairs = append(allPairs, pairs...)
 		res := scanner.FlashSearch(chainId, param, pairs)
-		s.Arbitrage(res)
+		s.Arbitrage(chainId, res)
 		s.SaveJSONToFile("output", param.Token, pairs)
 	}
 }

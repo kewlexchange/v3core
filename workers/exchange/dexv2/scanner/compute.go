@@ -143,7 +143,7 @@ func ArbBestTwoPools(A_rx, A_ry, B_rx, B_ry *big.Int) coreTypes.ArbResult {
 	return coreTypes.ArbResult{Exists: false, Side: false, Route: "", Dx: big.NewInt(0), Profit: big.NewInt(0), Mid: big.NewInt(0), Out: big.NewInt(0)}
 }
 
-func FlashSearch(chainId int64, scan models.ScanParams, tradingPairs []models.TradingPair) *coreTypes.ArbResult {
+func FlashSearch(chainId models.ChainID, scan models.ScanParams, tradingPairs []models.TradingPair) *coreTypes.ArbResult {
 
 	var cheapPair *uniswapSDKEntities.Pair
 	var cheapPrice *uniswapSDKEntities.Price
