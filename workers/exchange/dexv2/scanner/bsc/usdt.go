@@ -20,6 +20,9 @@ func GetUSDTPairs() (pairs []models.TradingPair) {
 	pairs = append(pairs, models.TradingPair{
 		Pair: *utils.AddressFromHex("0x16b9a82891338f9bA80E2D6970FddA79D1eb0daE")}) //KEWL
 
+	pairs = append(pairs, models.TradingPair{
+		Pair: *utils.AddressFromHex("0x2905817b020fD35D9d09672946362b62766f0d69")}) //SUSHI
+
 	return pairs
 }
 
