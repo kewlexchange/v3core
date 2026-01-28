@@ -30,7 +30,7 @@ func GetUSDC() (token models.ScanParams) {
 	return models.ScanParams{
 		ChainID:     constants.BSCChainId,
 		Token:       "USDC",
-		NativeToken: *utils.AddressFromHex("0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"),
+		NativeToken: constants.WETH_MAP[constants.BSCChainId],
 		Pairs:       GetUSDCPairs(),
 	}
 }

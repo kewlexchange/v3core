@@ -6,6 +6,7 @@ import (
 	"core/services"
 	"core/workers"
 	dexWorkers "core/workers/exchange/dexv2"
+	"core/workers/exchange/dexv2/scanner/avax"
 	"core/workers/exchange/dexv2/scanner/bsc"
 	"core/workers/exchange/dexv2/scanner/chiliz"
 	"fmt"
@@ -52,8 +53,14 @@ func main() {
 		//bsc.GetComplex(),
 	}
 
+	scanParamsAVAX := []models.ScanParams{
+		avax.GetROCO(),
+		avax.GetUSDC(),
+	}
+
 	dexService.ScanPairsSwapAll(constants.ChilizChainId, scanParamsCHZ)
 	dexService.ScanPairsSwapAll(constants.BSCChainId, scanParamsBSC)
+	dexService.ScanPairsSwapAll(constants.AVAXChainID, scanParamsAVAX)
 
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
@@ -74,8 +81,14 @@ func main() {
 			//bsc.GetComplex(),
 		}
 
+		scanParamsAVAX := []models.ScanParams{
+			avax.GetROCO(),
+			avax.GetUSDC(),
+		}
+
 		dexService.ScanPairSwapSingle(constants.ChilizChainId, scanParamsCHZ)
 		dexService.ScanPairSwapSingle(constants.BSCChainId, scanParamsBSC)
+		dexService.ScanPairSwapSingle(constants.AVAXChainID, scanParamsAVAX)
 	}
 	//dexService.FetchPairsConcurrent(constants.DEXExchanges)
 

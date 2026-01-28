@@ -12,6 +12,8 @@ var ChilizChainId = models.Chiliz
 var ChilizChain = models.ChainInfoMap[models.Chiliz]
 var BSCChainId = models.BSC
 var BSCChain = models.ChainInfoMap[models.BSC]
+var AVAXChainID = models.Avalanche
+var AVAXChain = models.ChainInfoMap[models.Avalanche]
 
 var DEXExchanges = []models.Exchange{
 	{
@@ -76,9 +78,21 @@ var DEXExchanges = []models.Exchange{
 		NativeToken: utils.AddressFromHex("0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"),
 		Multicall3:  utils.AddressFromHex("0xcA11bde05977b3631167028862bE2a173976CA11"),
 		StablePair:  utils.AddressFromHex("0xd99c7f6c65857ac913a8f880a4cb84032ab2fc5b"),
+		ChainID:     &BSCChainId,
+		RPC:         &BSCChain.RPC,
+	},
 
-		ChainID: &BSCChainId,
-		RPC:     &BSCChain.RPC,
+	{
+		Name:        "KEWL",
+		Kind:        models.ExchangeKindDEX,
+		Protocol:    models.DexProtocolV2,
+		Router:      utils.AddressFromHex("0xA0BB8f9865f732C277d0C162249A4F6c157ae9D0"),
+		Factory:     utils.AddressFromHex("0xA0BB8f9865f732C277d0C162249A4F6c157ae9D0"),
+		NativeToken: utils.AddressFromHex("0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7"),
+		Multicall3:  utils.AddressFromHex("0xcA11bde05977b3631167028862bE2a173976CA11"),
+		StablePair:  utils.AddressFromHex("0xf4003F4efBE8691B60249E6afbD307aBE7758adb"),
+		ChainID:     &AVAXChainID,
+		RPC:         &AVAXChain.RPC,
 	},
 }
 

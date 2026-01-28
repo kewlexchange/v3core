@@ -226,8 +226,8 @@ func (d *DexV2Fetcher) ExecuteSwap(chainId models.ChainID, params coreTypes.ArbR
 		return nil
 	}
 
-	if chainId == constants.BSCChainId {
-		fmt.Println("BSC")
+	if chainId != constants.ChilizChainId {
+		fmt.Println("BSC/AVAX")
 		return nil
 	}
 
@@ -353,9 +353,12 @@ func (d *DexV2Fetcher) ExecuteSwap(chainId models.ChainID, params coreTypes.ArbR
 }
 
 func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes.ArbResult) error {
-
-	if chainId == constants.BSCChainId {
-		fmt.Println("BSC")
+	if len(params) == 0 {
+		fmt.Println("EXEC_ALL_ZERO_PAIR")
+		return nil
+	}
+	if chainId != constants.ChilizChainId {
+		fmt.Println("BSC AVAX")
 		return nil
 	}
 
