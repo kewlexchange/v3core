@@ -1,6 +1,7 @@
 package chiliz
 
 import (
+	"core/constants"
 	"core/models"
 	"core/utils"
 )
@@ -17,7 +18,7 @@ func GetUSDCPairs() (pairs []models.TradingPair) {
 
 func GetUSDC() (token models.ScanParams) {
 	return models.ScanParams{
-		ChainID:     88888,
+		ChainID:     constants.ChilizChainId,
 		Token:       "USDC",
 		NativeToken: *utils.AddressFromHex("0x677F7e16C7Dd57be1D4C8aD1244883214953DC47"),
 		Pairs:       GetUSDCPairs(),

@@ -1,6 +1,7 @@
 package chiliz
 
 import (
+	"core/constants"
 	"core/models"
 	"core/utils"
 )
@@ -68,7 +69,7 @@ func GetComplexPairs() (pairs []models.TradingPair) {
 
 func GetComplex() (token models.ScanParams) {
 	return models.ScanParams{
-		ChainID:     88888,
+		ChainID:     constants.ChilizChainId,
 		Token:       "CHZ",
 		NativeToken: *utils.AddressFromHex("0x677F7e16C7Dd57be1D4C8aD1244883214953DC47"),
 		Pairs:       GetComplexPairs(),

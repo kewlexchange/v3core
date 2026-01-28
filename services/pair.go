@@ -153,7 +153,7 @@ func (s *PairService) ScanPairs(chainId int64, params []models.ScanParams) {
 	allPairs := []models.TradingPair{} // veya pairs'in tipi neyse onu kullan
 
 	for _, param := range params {
-		fmt.Println("Scanner", param.Token)
+		fmt.Println("Scanner", param.Token, chainId)
 
 		pairs, err := s.fetcher.FetchReserves(chainId, param.Pairs)
 		if err != nil {

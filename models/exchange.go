@@ -26,6 +26,7 @@ const (
 	Chiliz    ChainID = 88888
 	Ethereum  ChainID = 1
 	Avalanche ChainID = 43114
+	BSC       ChainID = 56
 )
 
 type ChainInfo struct {
@@ -49,6 +50,11 @@ var ChainInfoMap = map[ChainID]ChainInfo{
 		Explorer: "https://snowscan.xyz",
 		RPC:      "https://api.avax.network/ext/bc/C/rpc",
 		ChainID:  43114,
+	},
+	BSC: {
+		Explorer: "https://bscscan.com",
+		RPC:      "https://bsc-dataseed.bnbchain.org",
+		ChainID:  56,
 	},
 }
 

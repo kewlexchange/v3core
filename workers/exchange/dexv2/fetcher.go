@@ -155,6 +155,7 @@ func (d *DexV2Fetcher) CalculatePrices(reserveBase, reserveQuote, decimalsBase, 
 
 func (d *DexV2Fetcher) FetchReserves(chainId int64, pairs []models.TradingPair) ([]models.TradingPair, error) {
 
+	fmt.Println("FetchReserves", chainId)
 	kewlInfo, _ := constants.GetExchangeByName("KEWL", chainId)
 	evmClient, err := services.GetEVMClient(*kewlInfo.ChainID, *kewlInfo.RPC)
 	if err != nil {
@@ -225,7 +226,12 @@ func (d *DexV2Fetcher) ExecuteSwap(chainId int64, params coreTypes.ArbResult) er
 		return nil
 	}
 
-	flashContract := utils.AddressFromHex("0x48b68970abC5de47c6B0526f704b8A95eFeF8aF8")
+	if chainId == constants.BSCChainId {
+		fmt.Println("BSC")
+		return nil
+	}
+
+	flashContract := constants.FlashContractMap[models.ChainID(chainId)]
 	privateKeyHex := os.Getenv("PRIVATE_KEY")
 	if privateKeyHex == "" {
 		fmt.Println("PRIVATE_KEY env variable is not set")
@@ -234,7 +240,7 @@ func (d *DexV2Fetcher) ExecuteSwap(chainId int64, params coreTypes.ArbResult) er
 
 	evmClient := services.Clients[chainId]
 
-	flashSwap, err := flash.NewFlash(*flashContract, evmClient)
+	flashSwap, err := flash.NewFlash(flashContract, evmClient)
 	if err != nil {
 		fmt.Println("Err1", err)
 		return err
@@ -329,16 +335,16 @@ func (d *DexV2Fetcher) ExecuteSwap(chainId int64, params coreTypes.ArbResult) er
 	fmt.Println("Repay", params.Repay)
 	fmt.Println("Pair0", params.Path[0].Hex())
 	fmt.Println("Pair1", params.Path[1].Hex())
-	// 🔥 FLASH SWAP TETİKLENİYOR
+	//FLASH TETİKLENİYOR
 
-	tx, err := flashSwap.HandleFlash(auth, flashParams)
+	tx, err := flashSwap.HandleSwap(auth, flashParams)
 	if err != nil {
 		fmt.Println("Coder4", err)
 
 		return err
 	}
 
-	fmt.Println("🚀 FlashSwap TX:", tx.Hash().Hex())
+	fmt.Println("Flash TX:", tx.Hash().Hex())
 	return nil
 
 	//flashSwap.HandleFlash()

@@ -4,14 +4,18 @@ import (
 	"core/models"
 	"core/utils"
 	"fmt"
+
+	"github.com/ethereum/go-ethereum/common"
 )
 
-var chilizChainId = int64(models.Chiliz)
-var chilizChain = models.ChainInfoMap[models.Chiliz]
+var ChilizChainId = int64(models.Chiliz)
+var ChilizChain = models.ChainInfoMap[models.Chiliz]
+var BSCChainId = int64(models.BSC)
+var BSCChain = models.ChainInfoMap[models.BSC]
 
 var DEXExchanges = []models.Exchange{
 	{
-		Name:        "FANX",
+		Name:        "FANX_CHZ",
 		Kind:        models.ExchangeKindDEX,
 		Protocol:    models.DexProtocolV2,
 		Router:      utils.AddressFromHex("0xE2918AA38088878546c1A18F2F9b1BC83297fdD3"),
@@ -19,8 +23,8 @@ var DEXExchanges = []models.Exchange{
 		NativeToken: utils.AddressFromHex("0x677F7e16C7Dd57be1D4C8aD1244883214953DC47"),
 		Multicall3:  utils.AddressFromHex("0xcA11bde05977b3631167028862bE2a173976CA11"),
 		StablePair:  utils.AddressFromHex("0xff6d22b9bd32afb60ac717248c77be1ea16107a5"),
-		ChainID:     &chilizChainId,
-		RPC:         &chilizChain.RPC,
+		ChainID:     &ChilizChainId,
+		RPC:         &ChilizChain.RPC,
 	},
 	{
 		Name:        "KEWL",
@@ -32,11 +36,11 @@ var DEXExchanges = []models.Exchange{
 		Multicall3:  utils.AddressFromHex("0xcA11bde05977b3631167028862bE2a173976CA11"),
 		StablePair:  utils.AddressFromHex("0xff6d22b9bd32afb60ac717248c77be1ea16107a5"),
 
-		ChainID: &chilizChainId,
-		RPC:     &chilizChain.RPC,
+		ChainID: &ChilizChainId,
+		RPC:     &ChilizChain.RPC,
 	},
 	{
-		Name:        "DIVISWAP",
+		Name:        "DIVISWAP_CHZ",
 		Kind:        models.ExchangeKindDEX,
 		Protocol:    models.DexProtocolV2,
 		Router:      utils.AddressFromHex("0xbdd9c322ecf401e09c9d2dca3be46a7e45d48bb1"),
@@ -45,9 +49,41 @@ var DEXExchanges = []models.Exchange{
 		Multicall3:  utils.AddressFromHex("0xcA11bde05977b3631167028862bE2a173976CA11"),
 		StablePair:  utils.AddressFromHex("0xff6d22b9bd32afb60ac717248c77be1ea16107a5"),
 
-		ChainID: &chilizChainId,
-		RPC:     &chilizChain.RPC,
+		ChainID: &ChilizChainId,
+		RPC:     &ChilizChain.RPC,
 	},
+
+	{
+		Name:        "DIVISWAP_BSC",
+		Kind:        models.ExchangeKindDEX,
+		Protocol:    models.DexProtocolV2,
+		Router:      utils.AddressFromHex("0xbdd9c322ecf401e09c9d2dca3be46a7e45d48bb1"),
+		Factory:     utils.AddressFromHex("0xbdd9c322ecf401e09c9d2dca3be46a7e45d48bb1"),
+		NativeToken: utils.AddressFromHex("0x677F7e16C7Dd57be1D4C8aD1244883214953DC47"),
+		Multicall3:  utils.AddressFromHex("0xcA11bde05977b3631167028862bE2a173976CA11"),
+		StablePair:  utils.AddressFromHex("0xff6d22b9bd32afb60ac717248c77be1ea16107a5"),
+
+		ChainID: &ChilizChainId,
+		RPC:     &ChilizChain.RPC,
+	},
+
+	{
+		Name:        "KEWL",
+		Kind:        models.ExchangeKindDEX,
+		Protocol:    models.DexProtocolV2,
+		Router:      utils.AddressFromHex("0x5636A64B835F4E3821C798fdA16E0bA106357646"),
+		Factory:     utils.AddressFromHex("0x5636A64B835F4E3821C798fdA16E0bA106357646"),
+		NativeToken: utils.AddressFromHex("0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"),
+		Multicall3:  utils.AddressFromHex("0xcA11bde05977b3631167028862bE2a173976CA11"),
+		StablePair:  utils.AddressFromHex("0xd99c7f6c65857ac913a8f880a4cb84032ab2fc5b"),
+
+		ChainID: &BSCChainId,
+		RPC:     &BSCChain.RPC,
+	},
+}
+
+var FlashContractMap = map[models.ChainID]common.Address{
+	models.Chiliz: common.HexToAddress("0x48b68970abC5de47c6B0526f704b8A95eFeF8aF8"),
 }
 
 func GetExchangeByName(name string, chainId int64) (*models.Exchange, error) {

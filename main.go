@@ -6,12 +6,19 @@ import (
 	"core/services"
 	"core/workers"
 	dexWorkers "core/workers/exchange/dexv2"
+	"core/workers/exchange/dexv2/scanner/bsc"
 	"core/workers/exchange/dexv2/scanner/chiliz"
 	"fmt"
+	"log"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
-
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 	//services.FetchBalancesFromPKEY()
 
 	pool := workers.NewWorkerPool(100)
@@ -37,8 +44,13 @@ func main() {
 		//chiliz.GetComplex(),
 	}
 
-	dexService.ScanPairs(88888, scanParamsCHZ)
+	scanParamsBSC := []models.ScanParams{
+		bsc.GetUSDC(),
+	}
 
+	dexService.ScanPairs(constants.ChilizChainId, scanParamsCHZ)
+
+	dexService.ScanPairs(constants.BSCChainId, scanParamsBSC)
 	/*
 		ticker := time.NewTicker(1 * time.Second)
 		defer ticker.Stop()
