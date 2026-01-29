@@ -6,6 +6,7 @@ import (
 	uniswapSDKConstants "core/sdk/uniswap/constants"
 	uniswapSDKEntities "core/sdk/uniswap/entities"
 	coreTypes "core/types"
+	"core/utils"
 	"fmt"
 	"math/big"
 
@@ -288,16 +289,14 @@ func FlashSearch(chainId models.ChainID, scan models.ScanParams, tradingPairs []
 		}
 	}
 
-	fmt.Println("EXECUTION", res.Dx, res.Out, res.TokenInput.Address, res.TokenOutput.Address)
-
 	res.Exists = false
 	res.Borrow = res.TokenOutput.Address // Diger Token
 	res.Repay = res.TokenInput.Address   // CHZ
 	if res.Out.Cmp(res.Dx) > 0 {
-		fmt.Println("FOUND FOUND FOUND", res.Borrow, res.Repay)
 		res.Exists = true
+		fmt.Println("EXECUTION PROFIT", utils.FormatUnits(res.Profit, big.NewInt(18)), res.Dx, res.Out, res.TokenInput.Address, res.TokenOutput.Address)
 	}
-	fmt.Println("RES LENH", len(res.Path))
+
 	//res.Exists = false
 	return &res
 

@@ -97,7 +97,9 @@ var DEXExchanges = []models.Exchange{
 }
 
 var FlashContractMap = map[models.ChainID]common.Address{
-	models.Chiliz: common.HexToAddress("0x48b68970abC5de47c6B0526f704b8A95eFeF8aF8"),
+	models.Chiliz:    common.HexToAddress("0x48b68970abC5de47c6B0526f704b8A95eFeF8aF8"),
+	models.BSC:       common.HexToAddress("0x48b68970abC5de47c6B0526f704b8A95eFeF8aF8"),
+	models.Avalanche: common.HexToAddress("0x48b68970abC5de47c6B0526f704b8A95eFeF8aF8"),
 }
 
 func GetExchangeByName(name string, chainId models.ChainID) (*models.Exchange, error) {

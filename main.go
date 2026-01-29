@@ -56,12 +56,16 @@ func main() {
 	scanParamsAVAX := []models.ScanParams{
 		avax.GetROCO(),
 		avax.GetUSDC(),
+		avax.GetJOE(),
+		avax.GetXAVA(),
+		avax.GetCOQ(),
+		avax.GetPNG(),
 	}
 
 	fmt.Println("AVAX", len(scanParamsAVAX), "BSC", len(scanParamsBSC), "CHZ", len(scanParamsCHZ))
 
 	dexService.ScanPairsSwapAll(constants.ChilizChainId, scanParamsCHZ)
-	//dexService.ScanPairsSwapAll(constants.BSCChainId, scanParamsBSC)
+	//	dexService.ScanPairsSwapAll(constants.BSCChainId, scanParamsBSC)
 	//dexService.ScanPairsSwapAll(constants.AVAXChainID, scanParamsAVAX)
 
 	ticker := time.NewTicker(1 * time.Second)
@@ -87,6 +91,10 @@ func main() {
 		scanParamsAVAX := []models.ScanParams{
 			avax.GetROCO(),
 			avax.GetUSDC(),
+			avax.GetJOE(),
+			avax.GetXAVA(),
+			avax.GetCOQ(),
+			avax.GetPNG(),
 		}
 		fmt.Println("AVAX", len(scanParamsAVAX), "BSC", len(scanParamsBSC), "CHZ", len(scanParamsCHZ))
 

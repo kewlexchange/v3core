@@ -411,7 +411,6 @@ func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes
 
 	allSwapParams := []flash.SwapFlashParams{}
 
-	fmt.Println("BURADA BURADA BURADA")
 	totalProfit := big.NewInt(0)
 	for _, param := range params {
 		if !param.Exists {
@@ -431,6 +430,8 @@ func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes
 			totalProfit.Add(totalProfit, param.Profit)
 		}
 	}
+
+	fmt.Println("TOTAL PROFIT", utils.FormatUnits(totalProfit, big.NewInt(18)))
 
 	estimateAuth := *auth      // 👈 signer, chainID, her şey kopyalanır
 	estimateAuth.NoSend = true // sadece gönderme kapalı
@@ -452,13 +453,14 @@ func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes
 	)
 
 	fmt.Println("Estimated Gas: ", estimatedGas, estimatedFee, totalProfit)
-	if chainId != constants.ChilizChainId {
-		fmt.Println("BSC AVAX")
-		return nil
-	}
 
 	if estimatedFee.Cmp(totalProfit) > 0 {
 		fmt.Println("❌ Gas fee profitten büyük, işlem iptal")
+		return nil
+	}
+
+	if chainId != constants.ChilizChainId {
+		fmt.Println("BSC AVAX")
 		return nil
 	}
 
