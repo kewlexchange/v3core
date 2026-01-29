@@ -22,6 +22,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/shopspring/decimal"
 )
@@ -357,10 +358,6 @@ func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes
 		fmt.Println("EXEC_ALL_ZERO_PAIR")
 		return nil
 	}
-	if chainId != constants.ChilizChainId {
-		fmt.Println("BSC AVAX")
-		return nil
-	}
 
 	flashContract := constants.FlashContractMap[models.ChainID(chainId)]
 	privateKeyHex := os.Getenv("PRIVATE_KEY")
@@ -409,12 +406,13 @@ func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes
 	auth.Nonce = big.NewInt(int64(nonce))
 	auth.Value = big.NewInt(0)
 
-	// 🔥 SENİN VERDİĞİN TX’E GÖRE
 	auth.GasLimit = 0 // uint64(2_600_000)
 	auth.GasPrice = gasPrice
 
 	allSwapParams := []flash.SwapFlashParams{}
 
+	fmt.Println("BURADA BURADA BURADA")
+	totalProfit := big.NewInt(0)
 	for _, param := range params {
 		if !param.Exists {
 			continue
@@ -429,8 +427,41 @@ func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes
 			Path:   param.Path,
 		}
 		allSwapParams = append(allSwapParams, flashParams)
-
+		if param.Profit != nil {
+			totalProfit.Add(totalProfit, param.Profit)
+		}
 	}
+
+	estimateAuth := *auth      // 👈 signer, chainID, her şey kopyalanır
+	estimateAuth.NoSend = true // sadece gönderme kapalı
+
+	input, err := flashSwap.FlashTransactor.HandleSwapEx(
+		&estimateAuth,
+		allSwapParams,
+	)
+	if err != nil {
+		fmt.Println("ERR", err)
+		return err
+	}
+
+	estimatedGas := input.Gas()
+
+	estimatedFee := new(big.Int).Mul(
+		big.NewInt(int64(estimatedGas)),
+		gasPrice,
+	)
+
+	fmt.Println("Estimated Gas: ", estimatedGas, estimatedFee, totalProfit)
+	if chainId != constants.ChilizChainId {
+		fmt.Println("BSC AVAX")
+		return nil
+	}
+
+	if estimatedFee.Cmp(totalProfit) > 0 {
+		fmt.Println("❌ Gas fee profitten büyük, işlem iptal")
+		return nil
+	}
+
 	tx, err := flashSwap.HandleSwapEx(auth, allSwapParams)
 	if err != nil {
 		fmt.Println("HandleSwapEx", err)
@@ -438,10 +469,25 @@ func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes
 		return err
 	}
 
+	fmt.Println("Tx sent:", tx.Hash().Hex())
+
+	// ⏳ confirm bekle
+	receipt, err := bind.WaitMined(context.Background(), evmClient, tx)
+	if err != nil {
+		fmt.Println("WaitMined error:", err)
+		return err
+	}
+
+	if receipt.Status == types.ReceiptStatusFailed {
+		fmt.Println("❌ Tx reverted")
+		return fmt.Errorf("transaction reverted")
+	}
+
+	fmt.Println("✅ Tx confirmed")
+	fmt.Println("Gas used:", receipt.GasUsed)
+
 	fmt.Println("Flash TX:", tx.Hash().Hex())
 	return nil
-
-	//flashSwap.HandleFlash()
 }
 
 /*

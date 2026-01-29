@@ -227,56 +227,78 @@ func FlashSearch(chainId models.ChainID, scan models.ScanParams, tradingPairs []
 		}
 	*/
 
-	if cheapPair.Token0().Address == scan.NativeToken {
-		res.TokenInput = cheapPair.Token0() //her zaman chz
-		res.TokenOutput = cheapPair.Token1()
-	} else {
-		res.TokenInput = cheapPair.Token1() // CHZ
-		res.TokenOutput = cheapPair.Token0()
-	}
-
-	res.Path = []common.Address{
-		*cheapPair.Address,
-		*expensivePair.Address,
-	}
-	res.Borrow = res.TokenOutput.Address // Diger Token
-	res.Repay = res.TokenInput.Address   // CHZ
-
-	if res.Exists {
-		inputAmount, _ := uniswapSDKEntities.NewTokenAmount(res.TokenInput, res.Dx)
-		routeA, _ := uniswapSDKEntities.NewRoute([]*uniswapSDKEntities.Pair{cheapPair}, res.TokenInput, res.TokenOutput)
-		tradeA, _ := uniswapSDKEntities.NewTrade(routeA, inputAmount, constants.ExactInput)
-
-		fmt.Println("EXACT INPUT ", tradeA.InputAmount().ToSignificant(8), tradeA.InputAmount().Raw(), tradeA.OutputAmount().Raw(), tradeA.InputAmount().Token.Address.Hex())
-
-		routeB, _ := uniswapSDKEntities.NewRoute([]*uniswapSDKEntities.Pair{expensivePair}, res.TokenOutput, res.TokenInput)
-		tradeB, _ := uniswapSDKEntities.NewTrade(routeB, tradeA.OutputAmount(), constants.ExactInput)
-
-		fmt.Println("EXACT OUT A : ", tradeA.InputAmount().ToSignificant(8), " -> ", tradeA.OutputAmount().ToSignificant(8), " --> ", tradeB.OutputAmount().ToSignificant(8))
-		//fmt.Println("EXACT OUT B : ", tradeA.InputAmount().Token.Address.Hex(), " -> ", tradeA.OutputAmount().Token.Address.Hex(), " -> ", tradeB.OutputAmount().Token.Address.Hex())
-
-		res.Mid = tradeA.OutputAmount().Raw()
-		res.Out = tradeB.OutputAmount().Raw()
-
-		out := tradeB.OutputAmount().Raw()
-		in := tradeA.InputAmount().Raw()
-		//4,065716240485637954
-		//4.065716240485637954
-		//191123808.132694677150375565
-		//181853748,507489247764153965
-		res.Exists = false
-
-		if out.Cmp(in) > 0 {
-			res.Exists = true
+	if res.Side {
+		if cheapPair.Token0().Address == scan.NativeToken {
+			res.TokenInput = cheapPair.Token0() //her zaman chz
+			res.TokenOutput = cheapPair.Token1()
+		} else {
+			res.TokenInput = cheapPair.Token1() // CHZ
+			res.TokenOutput = cheapPair.Token0()
 		}
-
+	} else {
+		if expensivePair.Token0().Address == scan.NativeToken {
+			res.TokenInput = expensivePair.Token0() //her zaman chz
+			res.TokenOutput = expensivePair.Token1()
+		} else {
+			res.TokenInput = expensivePair.Token1() // CHZ
+			res.TokenOutput = expensivePair.Token0()
+		}
 	}
 
 	if res.Exists {
-		fmt.Println("BULUNDI,", chainId)
+		if res.Side {
+			inputAmount, _ := uniswapSDKEntities.NewTokenAmount(res.TokenInput, res.Dx)
+			routeA, _ := uniswapSDKEntities.NewRoute([]*uniswapSDKEntities.Pair{cheapPair}, res.TokenInput, res.TokenOutput)
+			tradeA, _ := uniswapSDKEntities.NewTrade(routeA, inputAmount, constants.ExactInput)
+
+			routeB, _ := uniswapSDKEntities.NewRoute([]*uniswapSDKEntities.Pair{expensivePair}, res.TokenOutput, res.TokenInput)
+			tradeB, _ := uniswapSDKEntities.NewTrade(routeB, tradeA.OutputAmount(), constants.ExactInput)
+
+			res.Mid = tradeA.OutputAmount().Raw()
+			res.Out = tradeB.OutputAmount().Raw()
+
+			res.Path = []common.Address{
+				*cheapPair.Address,
+				*expensivePair.Address,
+			}
+
+			fmt.Println("CODER 1")
+		} else {
+			inputAmount, _ := uniswapSDKEntities.NewTokenAmount(res.TokenInput, res.Dx)
+			routeA, _ := uniswapSDKEntities.NewRoute([]*uniswapSDKEntities.Pair{expensivePair}, res.TokenInput, res.TokenOutput)
+			tradeA, _ := uniswapSDKEntities.NewTrade(routeA, inputAmount, constants.ExactInput)
+
+			routeB, _ := uniswapSDKEntities.NewRoute([]*uniswapSDKEntities.Pair{cheapPair}, res.TokenOutput, res.TokenInput)
+			tradeB, _ := uniswapSDKEntities.NewTrade(routeB, tradeA.OutputAmount(), constants.ExactInput)
+
+			res.Mid = tradeA.OutputAmount().Raw()
+			res.Out = tradeB.OutputAmount().Raw()
+
+			fmt.Println("ISLEM ->", tradeA.InputAmount().ToSignificant(8), tradeA.OutputAmount().ToSignificant(8), tradeB.OutputAmount().ToSignificant(8))
+
+			fmt.Println("INPUT ->", res.TokenInput.Address, res.TokenOutput.Address)
+
+			fmt.Println("ROTA -> ", res.Side, expensivePair.Address.Hex(), cheapPair.Address.Hex())
+
+			res.Path = []common.Address{
+				*expensivePair.Address,
+				*cheapPair.Address,
+			}
+
+		}
 	}
+
+	fmt.Println("EXECUTION", res.Dx, res.Out, res.TokenInput.Address, res.TokenOutput.Address)
 
 	res.Exists = false
+	res.Borrow = res.TokenOutput.Address // Diger Token
+	res.Repay = res.TokenInput.Address   // CHZ
+	if res.Out.Cmp(res.Dx) > 0 {
+		fmt.Println("FOUND FOUND FOUND", res.Borrow, res.Repay)
+		res.Exists = true
+	}
+	fmt.Println("RES LENH", len(res.Path))
+	//res.Exists = false
 	return &res
 
 }
