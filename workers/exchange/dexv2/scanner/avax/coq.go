@@ -22,7 +22,7 @@ func GetCOQ() (token models.ScanParams) {
 	return models.ScanParams{
 		ChainID:     constants.AVAXChainID,
 		Token:       "COQ",
-		NativeToken: constants.WETH_MAP[constants.AVAXChainID],
+		NativeToken: constants.WETH_MAP[constants.AVAXChainID][0],
 		Pairs:       GetCOQPairs(),
 	}
 }

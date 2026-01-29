@@ -10,7 +10,7 @@ import (
 func GetChilizCycle() (cycle []models.Cycle) {
 	cycle = []models.Cycle{
 		{ //CHZINU -> PEPPER -> CHZ
-			InputToken: constants.WETH_MAP[constants.ChilizChainId],
+			InputToken: constants.WETH_MAP[constants.ChilizChainId][0],
 			Hops: []models.Hop{ //CHZINU -> PEPPER -> CHZ
 				{
 					Pair:        common.HexToAddress("0xf9168b29f8534a449b7eb796fac8c60fcaed5af0"), //CHZINUxwCHZ
@@ -22,12 +22,12 @@ func GetChilizCycle() (cycle []models.Cycle) {
 				},
 				{
 					Pair:        common.HexToAddress("0x5f3efab95224dbb5490e8ddc8d2c1daad4c0db37"), //PEPPERxCHZ
-					OutputToken: constants.WETH_MAP[constants.ChilizChainId],                       //CHZ
+					OutputToken: constants.WETH_MAP[constants.ChilizChainId][0],                    //CHZ
 				},
 			},
 		},
 		{ //CHZINU -> PSG -> CHZ
-			InputToken: constants.WETH_MAP[constants.ChilizChainId],
+			InputToken: constants.WETH_MAP[constants.ChilizChainId][0],
 			Hops: []models.Hop{
 				{
 					Pair:        common.HexToAddress("0xf9168b29f8534a449b7eb796fac8c60fcaed5af0"), //CHZINUxwCHZ
@@ -39,13 +39,13 @@ func GetChilizCycle() (cycle []models.Cycle) {
 				},
 				{
 					Pair:        common.HexToAddress("0xea844079241c84fae62648c380a38b913d86e7cf"), //PSGxCHZ
-					OutputToken: constants.WETH_MAP[constants.ChilizChainId],                       //CHZ
+					OutputToken: constants.WETH_MAP[constants.ChilizChainId][0],                    //CHZ
 				},
 			},
 		},
 
 		{
-			InputToken: constants.WETH_MAP[constants.ChilizChainId],
+			InputToken: constants.WETH_MAP[constants.ChilizChainId][0],
 			Hops: []models.Hop{ //CHZINU -> PEPPERxCHZINU FAN -> DSWAP PEPPERxCHZ
 				{
 					Pair:        common.HexToAddress("0xf9168b29f8534a449b7eb796fac8c60fcaed5af0"), //CHZINUxwCHZ
@@ -57,13 +57,13 @@ func GetChilizCycle() (cycle []models.Cycle) {
 				},
 				{
 					Pair:        common.HexToAddress("0x59ae0cff65e648fecec8e539a6f6c89c337a48f1"), //DSWAP PEPPER CHZ
-					OutputToken: constants.WETH_MAP[constants.ChilizChainId],                       //CHZ
+					OutputToken: constants.WETH_MAP[constants.ChilizChainId][0],                    //CHZ
 				},
 			},
 		},
 
 		{
-			InputToken: constants.WETH_MAP[constants.ChilizChainId],
+			InputToken: constants.WETH_MAP[constants.ChilizChainId][0],
 			Hops: []models.Hop{ //CHZINU -> PEPPERxCHZINU -> FANX PEPPER CHZ
 				{
 					Pair:        common.HexToAddress("0xf9168b29f8534a449b7eb796fac8c60fcaed5af0"), //CHZINUxwCHZ
@@ -75,7 +75,7 @@ func GetChilizCycle() (cycle []models.Cycle) {
 				},
 				{
 					Pair:        common.HexToAddress("0x5f3efab95224dbb5490e8ddc8d2c1daad4c0db37"), //FANX PEPPER CHZ
-					OutputToken: constants.WETH_MAP[constants.ChilizChainId],                       //CHZ
+					OutputToken: constants.WETH_MAP[constants.ChilizChainId][0],                    //CHZ
 				},
 			},
 		},

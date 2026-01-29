@@ -27,7 +27,7 @@ func GetCAKE() (token models.ScanParams) {
 	return models.ScanParams{
 		ChainID:     constants.BSCChainId,
 		Token:       "CAKE",
-		NativeToken: constants.WETH_MAP[constants.BSCChainId],
+		NativeToken: constants.WETH_MAP[constants.BSCChainId][0],
 		Pairs:       GetUSDCPairs(),
 	}
 }

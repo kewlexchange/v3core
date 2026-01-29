@@ -71,7 +71,7 @@ func GetComplex() (token models.ScanParams) {
 	return models.ScanParams{
 		ChainID:     constants.ChilizChainId,
 		Token:       "CHZ",
-		NativeToken: constants.WETH_MAP[constants.ChilizChainId],
+		NativeToken: constants.WETH_MAP[constants.ChilizChainId][0],
 		Pairs:       GetComplexPairs(),
 	}
 }

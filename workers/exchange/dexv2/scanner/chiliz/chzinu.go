@@ -20,7 +20,7 @@ func GetCHZINU() (token models.ScanParams) {
 	return models.ScanParams{
 		ChainID:     constants.ChilizChainId,
 		Token:       "CHZINU",
-		NativeToken: constants.WETH_MAP[constants.ChilizChainId],
+		NativeToken: constants.WETH_MAP[constants.ChilizChainId][0],
 		Pairs:       GetCHZINUPairs(),
 	}
 }

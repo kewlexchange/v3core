@@ -24,7 +24,7 @@ func GetPNG() (token models.ScanParams) {
 	return models.ScanParams{
 		ChainID:     constants.AVAXChainID,
 		Token:       "PNG",
-		NativeToken: constants.WETH_MAP[constants.AVAXChainID],
+		NativeToken: constants.WETH_MAP[constants.AVAXChainID][0],
 		Pairs:       GetPNGPairs(),
 	}
 }

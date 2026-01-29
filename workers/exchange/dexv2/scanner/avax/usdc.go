@@ -27,7 +27,7 @@ func GetUSDC() (token models.ScanParams) {
 	return models.ScanParams{
 		ChainID:     constants.AVAXChainID,
 		Token:       "USDC",
-		NativeToken: constants.WETH_MAP[constants.AVAXChainID],
+		NativeToken: constants.WETH_MAP[constants.AVAXChainID][0],
 		Pairs:       GetUSDCPairs(),
 	}
 }

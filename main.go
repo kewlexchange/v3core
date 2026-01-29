@@ -65,7 +65,7 @@ func main() {
 	fmt.Println("AVAX", len(scanParamsAVAX), "BSC", len(scanParamsBSC), "CHZ", len(scanParamsCHZ))
 
 	dexService.ScanPairsSwapAll(constants.ChilizChainId, scanParamsCHZ)
-	//	dexService.ScanPairsSwapAll(constants.BSCChainId, scanParamsBSC)
+	//dexService.ScanPairsSwapAll(constants.BSCChainId, scanParamsBSC)
 	//dexService.ScanPairsSwapAll(constants.AVAXChainID, scanParamsAVAX)
 
 	ticker := time.NewTicker(1 * time.Second)

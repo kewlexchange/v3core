@@ -22,7 +22,7 @@ func GetJOE() (token models.ScanParams) {
 	return models.ScanParams{
 		ChainID:     constants.AVAXChainID,
 		Token:       "JOE",
-		NativeToken: constants.WETH_MAP[constants.AVAXChainID],
+		NativeToken: constants.WETH_MAP[constants.AVAXChainID][0],
 		Pairs:       GetJOEPairs(),
 	}
 }

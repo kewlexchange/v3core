@@ -20,7 +20,7 @@ func GetUSDC() (token models.ScanParams) {
 	return models.ScanParams{
 		ChainID:     constants.ChilizChainId,
 		Token:       "USDC",
-		NativeToken: constants.WETH_MAP[constants.ChilizChainId],
+		NativeToken: constants.WETH_MAP[constants.ChilizChainId][0],
 		Pairs:       GetUSDCPairs(),
 	}
 }
