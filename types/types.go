@@ -3,6 +3,8 @@ package types
 import (
 	"math/big"
 
+	uniswapSDKEntities "core/sdk/uniswap/entities"
+
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -18,4 +20,10 @@ type ArbResult struct {
 	Borrow common.Address
 	Repay  common.Address
 	Path   []common.Address
+
+	TokenInput  *uniswapSDKEntities.Token
+	TokenOutput *uniswapSDKEntities.Token
+
+	PriceImpactA *uniswapSDKEntities.Percent
+	PriceImpactB *uniswapSDKEntities.Percent
 }

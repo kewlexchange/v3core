@@ -58,11 +58,13 @@ func main() {
 		avax.GetUSDC(),
 	}
 
-	dexService.ScanPairsSwapAll(constants.ChilizChainId, scanParamsCHZ)
-	dexService.ScanPairsSwapAll(constants.BSCChainId, scanParamsBSC)
-	dexService.ScanPairsSwapAll(constants.AVAXChainID, scanParamsAVAX)
+	fmt.Println("AVAX", len(scanParamsAVAX), "BSC", len(scanParamsBSC), "CHZ", len(scanParamsCHZ))
 
-	ticker := time.NewTicker(5 * time.Second)
+	dexService.ScanPairsSwapAll(constants.ChilizChainId, scanParamsCHZ)
+	//	dexService.ScanPairsSwapAll(constants.BSCChainId, scanParamsBSC)
+	//	dexService.ScanPairsSwapAll(constants.AVAXChainID, scanParamsAVAX)
+
+	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
 	for {
@@ -74,6 +76,7 @@ func main() {
 			chiliz.GetUSDC(),
 			//chiliz.GetComplex(),
 		}
+
 		scanParamsBSC := []models.ScanParams{
 			bsc.GetUSDC(),
 			bsc.GetUSDT(),
@@ -85,66 +88,69 @@ func main() {
 			avax.GetROCO(),
 			avax.GetUSDC(),
 		}
+		fmt.Println("AVAX", len(scanParamsAVAX), "BSC", len(scanParamsBSC), "CHZ", len(scanParamsCHZ))
 
-		dexService.ScanPairSwapSingle(constants.ChilizChainId, scanParamsCHZ)
-		dexService.ScanPairSwapSingle(constants.BSCChainId, scanParamsBSC)
-		dexService.ScanPairSwapSingle(constants.AVAXChainID, scanParamsAVAX)
+		dexService.ScanPairsSwapAll(constants.ChilizChainId, scanParamsCHZ)
+		//	dexService.ScanPairSwapSingle(constants.BSCChainId, scanParamsBSC)
+		//	dexService.ScanPairSwapSingle(constants.AVAXChainID, scanParamsAVAX)
 	}
+
 	//dexService.FetchPairsConcurrent(constants.DEXExchanges)
 
 	/*
-		// CEX exchanges
-		cexExchanges := []models.Exchange{
-			{Name: "BINANCE", Kind: models.ExchangeKindCEX},
-			{Name: "BTCTURK", Kind: models.ExchangeKindCEX},
-			{Name: "OKX", Kind: models.ExchangeKindCEX},
-			{Name: "MEXC", Kind: models.ExchangeKindCEX},
-		}
-		for _, ex := range cexExchanges {
 
-			switch ex.Name {
+	   	// CEX exchanges
+	   	cexExchanges := []models.Exchange{
+	   		{Name: "BINANCE", Kind: models.ExchangeKindCEX},
+	   		{Name: "BTCTURK", Kind: models.ExchangeKindCEX},
+	   		{Name: "OKX", Kind: models.ExchangeKindCEX},
+	   		{Name: "MEXC", Kind: models.ExchangeKindCEX},
+	   	}
+	   	for _, ex := range cexExchanges {
 
-			case "BINANCE":
+	   		switch ex.Name {
 
-				client := ccxt.NewBinance(map[string]interface{}{
-					"enableRateLimit": true,
-				})
-				fetcher := cexWorkers.NewCexFetcher(client) // POINTER gerekmez
-				service := services.NewPairService(pool, fetcher)
-				service.FetchPairsConcurrent([]models.Exchange{ex})
+	   		case "BINANCE":
 
-			case "MEXC":
+	   			client := ccxt.NewBinance(map[string]interface{}{
+	   				"enableRateLimit": true,
+	   			})
+	   			fetcher := cexWorkers.NewCexFetcher(client) // POINTER gerekmez
+	   			service := services.NewPairService(pool, fetcher)
+	   			service.FetchPairsConcurrent([]models.Exchange{ex})
 
-				client := ccxt.NewMexc(map[string]interface{}{
-					"enableRateLimit": true,
-				})
-				fetcher := cexWorkers.NewCexFetcher(client) // POINTER gerekmez
-				service := services.NewPairService(pool, fetcher)
-				service.FetchPairsConcurrent([]models.Exchange{ex})
+	   		case "MEXC":
 
-			case "OKX":
+	   			client := ccxt.NewMexc(map[string]interface{}{
+	   				"enableRateLimit": true,
+	   			})
+	   			fetcher := cexWorkers.NewCexFetcher(client) // POINTER gerekmez
+	   			service := services.NewPairService(pool, fetcher)
+	   			service.FetchPairsConcurrent([]models.Exchange{ex})
 
-				client := ccxt.NewOkx(map[string]interface{}{
-					"enableRateLimit": true,
-				})
-				fetcher := cexWorkers.NewCexFetcher(client) // POINTER gerekmez
-				service := services.NewPairService(pool, fetcher)
-				service.FetchPairsConcurrent([]models.Exchange{ex})
-			case "BTCTURK":
-				client := ccxt.NewBtcturk(map[string]interface{}{
-					"enableRateLimit": true,
-				})
+	   		case "OKX":
 
-				fetcher := cexWorkers.NewCexFetcher(client)
-				service := services.NewPairService(pool, fetcher)
-				service.FetchPairsConcurrent([]db.Exchange{ex})
+	   			client := ccxt.NewOkx(map[string]interface{}{
+	   				"enableRateLimit": true,
+	   			})
+	   			fetcher := cexWorkers.NewCexFetcher(client) // POINTER gerekmez
+	   			service := services.NewPairService(pool, fetcher)
+	   			service.FetchPairsConcurrent([]models.Exchange{ex})
+	   		case "BTCTURK":
+	   			client := ccxt.NewBtcturk(map[string]interface{}{
+	   				"enableRateLimit": true,
+	   			})
 
-			case "Paribu":
-				println("[WARN] Paribu CCXT desteklemiyor, skip ediliyor.")
-				// TODO: ParibuFetcher ekle
-			}
-		}
+	   			fetcher := cexWorkers.NewCexFetcher(client)
+	   			service := services.NewPairService(pool, fetcher)
+	   			service.FetchPairsConcurrent([]db.Exchange{ex})
 
+	   		case "Paribu":
+	   			println("[WARN] Paribu CCXT desteklemiyor, skip ediliyor.")
+	   			// TODO: ParibuFetcher ekle
+	   		}
+	   	}
 
-	pool.Wait()*/
+	   pool.Wait()
+	*/
 }

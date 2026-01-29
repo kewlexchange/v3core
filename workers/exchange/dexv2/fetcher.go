@@ -341,7 +341,7 @@ func (d *DexV2Fetcher) ExecuteSwap(chainId models.ChainID, params coreTypes.ArbR
 
 	tx, err := flashSwap.HandleSwap(auth, flashParams)
 	if err != nil {
-		fmt.Println("Coder4", err)
+		fmt.Println("Coder5", err)
 
 		return err
 	}
@@ -433,7 +433,7 @@ func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes
 	}
 	tx, err := flashSwap.HandleSwapEx(auth, allSwapParams)
 	if err != nil {
-		fmt.Println("Coder4", err)
+		fmt.Println("HandleSwapEx", err)
 
 		return err
 	}
