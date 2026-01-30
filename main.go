@@ -9,49 +9,18 @@ import (
 	"core/workers/exchange/dexv2/scanner/avax"
 	"core/workers/exchange/dexv2/scanner/bsc"
 	"core/workers/exchange/dexv2/scanner/chiliz"
-	"fmt"
 	"log"
+	"sync/atomic"
 	"time"
 
 	"github.com/joho/godotenv"
 )
 
-func main() {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-	//services.FetchBalancesFromPKEY()
+func handleScan() {
+	pool := workers.NewWorkerPool(50)
 
-	pool := workers.NewWorkerPool(100)
-
-	// DEX fetcher
 	dexFetcher := &dexWorkers.DexV2Fetcher{}
 	dexService := services.NewPairService(pool, dexFetcher)
-
-	// DEX exchanges
-
-	for _, dex := range constants.DEXExchanges {
-		client, err := services.GetEVMClient(*dex.ChainID, *dex.RPC)
-		if err != nil {
-			fmt.Println("GetEVMClient error:", err)
-		}
-		defer client.Close()
-	}
-
-	scanParamsCHZ := []models.ScanParams{
-		chiliz.GetUSDC(),
-		chiliz.GetPEPPER(),
-		chiliz.GetCHZINU(),
-		//chiliz.GetComplex(),
-	}
-
-	scanParamsBSC := []models.ScanParams{
-		bsc.GetUSDC(),
-		bsc.GetUSDT(),
-		bsc.GetCAKE(),
-		//bsc.GetComplex(),
-	}
 
 	scanParamsAVAX := []models.ScanParams{
 		avax.GetROCO(),
@@ -60,48 +29,68 @@ func main() {
 		avax.GetXAVA(),
 		avax.GetCOQ(),
 		avax.GetPNG(),
+		avax.GetARENA(),
+		avax.GetUSDT(),
+		avax.GetAAAVE(),
+		avax.GetWETH(),
+		avax.GetSAVAX(),
+		avax.GetUSDCE(),
+		avax.GetTSD(),
+		avax.GetLINK(),
+		avax.GetSUSHI(),
+		avax.GetUSDTE(),
+		avax.GetDAI(),
 	}
 
-	fmt.Println("AVAX", len(scanParamsAVAX), "BSC", len(scanParamsBSC), "CHZ", len(scanParamsCHZ))
+	scanParamsCHZ := []models.ScanParams{
+		chiliz.GetUSDC(),
+		chiliz.GetPEPPER(),
+		chiliz.GetCHZINU(),
+	}
 
-	dexService.ScanPairsSwapAll(constants.ChilizChainId, scanParamsCHZ)
-	//dexService.ScanPairsSwapAll(constants.BSCChainId, scanParamsBSC)
-	//dexService.ScanPairsSwapAll(constants.AVAXChainID, scanParamsAVAX)
+	scanParamsBSC := []models.ScanParams{
+		bsc.GetUSDC(),
+		bsc.GetUSDT(),
+		bsc.GetCAKE(),
+		bsc.GetETH(),
+		bsc.GetBTCB(),
+		bsc.GetADA(),
+		bsc.GetAUTO(),
+		bsc.GetBAT(),
+		bsc.GetBSW(),
+		bsc.GetC98(),
+		bsc.GetCEEK(),
+		bsc.GetDOGE(),
+	}
 
-	ticker := time.NewTicker(1 * time.Second)
+	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
 
-	for {
-		<-ticker.C
+	var scanning atomic.Bool
 
-		scanParamsCHZ := []models.ScanParams{
-			chiliz.GetPEPPER(),
-			chiliz.GetCHZINU(),
-			chiliz.GetUSDC(),
-			//chiliz.GetComplex(),
+	for range ticker.C {
+		if scanning.Load() {
+			continue
 		}
 
-		scanParamsBSC := []models.ScanParams{
-			bsc.GetUSDC(),
-			bsc.GetUSDT(),
-			bsc.GetCAKE(),
-			//bsc.GetComplex(),
-		}
-
-		scanParamsAVAX := []models.ScanParams{
-			avax.GetROCO(),
-			avax.GetUSDC(),
-			avax.GetJOE(),
-			avax.GetXAVA(),
-			avax.GetCOQ(),
-			avax.GetPNG(),
-		}
-		fmt.Println("AVAX", len(scanParamsAVAX), "BSC", len(scanParamsBSC), "CHZ", len(scanParamsCHZ))
-
-		dexService.ScanPairsSwapAll(constants.ChilizChainId, scanParamsCHZ)
-		//dexService.ScanPairsSwapAll(constants.BSCChainId, scanParamsBSC)
-		//dexService.ScanPairsSwapAll(constants.AVAXChainID, scanParamsAVAX)
+		scanning.Store(true)
+		go func() {
+			defer scanning.Store(false)
+			go dexService.ScanPairsSwapAll(constants.AVAXChainID, scanParamsAVAX)
+			go dexService.ScanPairsSwapAll(constants.ChilizChainId, scanParamsCHZ)
+			go dexService.ScanPairsSwapAll(constants.BSCChainId, scanParamsBSC)
+		}()
 	}
+}
+
+func main() {
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	handleScan()
+	//services.FetchBalancesFromPKEY()
 
 	//dexService.FetchPairsConcurrent(constants.DEXExchanges)
 

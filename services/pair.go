@@ -142,7 +142,7 @@ func (s *PairService) FetchPairsConcurrent(exchanges []models.Exchange) {
 
 	wg.Wait() // tüm fetch işlemleri bitene kadar bekle
 
-	s.SaveJSONToFile("output", "all_exchanges", allPairs)
+	//s.SaveJSONToFile("output", "all_exchanges", allPairs)
 }
 
 func (s *PairService) Arbitrage(chainId models.ChainID, params *coreTypes.ArbResult) {
@@ -168,10 +168,10 @@ func (s *PairService) ScanPairSwapSingle(chainId models.ChainID, params []models
 }
 
 func (s *PairService) ScanPairsSwapAll(chainId models.ChainID, params []models.ScanParams) {
+	fmt.Println("Scanner", chainId)
 
 	allSwapParams := []coreTypes.ArbResult{}
 	for _, param := range params {
-		fmt.Println("Scanner", param.Token, chainId)
 
 		pairs, err := s.fetcher.FetchReserves(chainId, param.Pairs)
 		if err != nil {

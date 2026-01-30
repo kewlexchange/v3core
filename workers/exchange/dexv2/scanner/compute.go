@@ -219,15 +219,6 @@ func FlashSearch(chainId models.ChainID, scan models.ScanParams, tradingPairs []
 	res.PriceImpactA = PriceImpact(res.Dx, R1, R2)
 	res.PriceImpactB = PriceImpact(res.Dx, R3, R4)
 
-	/*
-		if res.Exists {
-			fmt.Println("\t PRICE", cheapPrice.ToSignificant(8), cheapPair.Address.Hex(), expensivePrice.ToSignificant(8), expensivePair.Address.Hex())
-			fmt.Printf("ROUTE: %s IN: %s PROFIT: %s MID: %s OUT: %s \n", res.Route, coreUtils.ToEther(res.Dx), coreUtils.ToEther(res.Profit), coreUtils.ToEther(res.Mid), coreUtils.ToEther(res.Out))
-			fmt.Printf("Price Impact on Pool A: %s B: %s \n", res.PriceImpactA.ToFixed(2), res.PriceImpactB.ToFixed(2))
-			fmt.Println("MID : ", res.Mid.String())
-		}
-	*/
-
 	if res.Side {
 		if cheapPair.Token0().Address == scan.NativeToken {
 			res.TokenInput = cheapPair.Token0() //her zaman chz
@@ -279,7 +270,7 @@ func FlashSearch(chainId models.ChainID, scan models.ScanParams, tradingPairs []
 
 			fmt.Println("INPUT ->", res.TokenInput.Address, res.TokenOutput.Address)
 
-			fmt.Println("ROTA -> ", res.Side, expensivePair.Address.Hex(), cheapPair.Address.Hex())
+			fmt.Println("ROTA -> ", chainId, res.Side, expensivePair.Address.Hex(), cheapPair.Address.Hex())
 
 			res.Path = []common.Address{
 				*expensivePair.Address,

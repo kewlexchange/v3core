@@ -4,6 +4,7 @@ import (
 	"core/models"
 	"core/utils"
 	"fmt"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -98,8 +99,8 @@ var DEXExchanges = []models.Exchange{
 
 var FlashContractMap = map[models.ChainID]common.Address{
 	models.Chiliz:    common.HexToAddress("0x48b68970abC5de47c6B0526f704b8A95eFeF8aF8"),
-	models.BSC:       common.HexToAddress("0x48b68970abC5de47c6B0526f704b8A95eFeF8aF8"),
-	models.Avalanche: common.HexToAddress("0x48b68970abC5de47c6B0526f704b8A95eFeF8aF8"),
+	models.BSC:       common.HexToAddress("0xa12c6dBd6303E3C9BDA5AB5ed1AB4E21Df81aCFf"),
+	models.Avalanche: common.HexToAddress("0x5a8D5bB728C87d689579BB844eBBc667aa9b7Aff"),
 }
 
 func GetExchangeByName(name string, chainId models.ChainID) (*models.Exchange, error) {
@@ -109,4 +110,10 @@ func GetExchangeByName(name string, chainId models.ChainID) (*models.Exchange, e
 		}
 	}
 	return nil, fmt.Errorf("exchange with name %s not found", name)
+}
+
+var FEE_MAP = map[models.ChainID]big.Int{
+	models.Chiliz:    *big.NewInt(1000000000000000000),
+	models.Avalanche: *big.NewInt(102790000000000),
+	models.BSC:       *big.NewInt(7000000000000),
 }

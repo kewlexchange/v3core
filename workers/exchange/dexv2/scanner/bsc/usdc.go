@@ -12,9 +12,6 @@ func GetUSDCPairs() (pairs []models.TradingPair) {
 		Pair: *utils.AddressFromHex("0xd99c7F6C65857AC913a8f880A4cb84032AB2FC5b")}) //PANCAKE
 
 	pairs = append(pairs, models.TradingPair{
-		Pair: *utils.AddressFromHex("0x57c68F0e9E6bE81FB4D9a46e1910C5DAA9c4cfeb")}) //KEWL
-
-	pairs = append(pairs, models.TradingPair{
 		Pair: *utils.AddressFromHex("0x06cd679121ec37b0a2fd673d4976b09d81791856")}) //KEWL
 
 	pairs = append(pairs, models.TradingPair{

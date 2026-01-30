@@ -19,6 +19,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -156,7 +157,6 @@ func (d *DexV2Fetcher) CalculatePrices(reserveBase, reserveQuote, decimalsBase, 
 
 func (d *DexV2Fetcher) FetchReserves(chainId models.ChainID, pairs []models.TradingPair) ([]models.TradingPair, error) {
 
-	fmt.Println("FetchReserves", chainId)
 	kewlInfo, _ := constants.GetExchangeByName("KEWL", chainId)
 	evmClient, err := services.GetEVMClient(*kewlInfo.ChainID, *kewlInfo.RPC)
 	if err != nil {
@@ -355,7 +355,6 @@ func (d *DexV2Fetcher) ExecuteSwap(chainId models.ChainID, params coreTypes.ArbR
 
 func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes.ArbResult) error {
 	if len(params) == 0 {
-		fmt.Println("EXEC_ALL_ZERO_PAIR")
 		return nil
 	}
 
@@ -391,11 +390,6 @@ func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes
 		return err
 	}
 
-	gasPrice, err := evmClient.SuggestGasPrice(context.Background())
-	if err != nil {
-		return err
-	}
-
 	chainID := big.NewInt(chainId.Int64())
 	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, chainID)
 	if err != nil {
@@ -406,8 +400,8 @@ func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes
 	auth.Nonce = big.NewInt(int64(nonce))
 	auth.Value = big.NewInt(0)
 
-	auth.GasLimit = 0 // uint64(2_600_000)
-	auth.GasPrice = gasPrice
+	//auth.GasLimit = 0 // uint64(2_600_000)
+	//auth.GasPrice = gasPrice
 
 	allSwapParams := []flash.SwapFlashParams{}
 
@@ -431,36 +425,59 @@ func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes
 		}
 	}
 
-	fmt.Println("TOTAL PROFIT", utils.FormatUnits(totalProfit, big.NewInt(18)))
+	estimateAuth := *auth
+	estimateAuth.NoSend = true
 
-	estimateAuth := *auth      // 👈 signer, chainID, her şey kopyalanır
-	estimateAuth.NoSend = true // sadece gönderme kapalı
-
-	input, err := flashSwap.FlashTransactor.HandleSwapEx(
-		&estimateAuth,
-		allSwapParams,
-	)
+	txPreview, err := flashSwap.HandleSwapEx(&estimateAuth, allSwapParams)
 	if err != nil {
-		fmt.Println("ERR", err)
+		fmt.Println("Preview error:", err)
+		return err
+	}
+	msg := ethereum.CallMsg{
+		From: auth.From,
+		To:   &flashContract,
+		Data: txPreview.Data(),
+	}
+
+	estimatedGas, err := evmClient.EstimateGas(context.Background(), msg)
+	if err != nil {
+		fmt.Println("EstimateGas failed:", err)
 		return err
 	}
 
-	estimatedGas := input.Gas()
-
-	estimatedFee := new(big.Int).Mul(
-		big.NewInt(int64(estimatedGas)),
-		gasPrice,
-	)
-
-	fmt.Println("Estimated Gas: ", estimatedGas, estimatedFee, totalProfit)
-
-	if estimatedFee.Cmp(totalProfit) > 0 {
-		fmt.Println("❌ Gas fee profitten büyük, işlem iptal")
-		return nil
+	header, err := evmClient.HeaderByNumber(context.Background(), nil)
+	if err != nil {
+		return err
 	}
 
-	if chainId != constants.ChilizChainId {
-		fmt.Println("BSC AVAX")
+	baseFee := header.BaseFee
+	priorityFee := big.NewInt(2_000_000) // 2 gwei (chain'e göre ayarlayabilirsin)
+
+	effectiveGasPrice := new(big.Int).Add(baseFee, priorityFee)
+
+	gasCost := new(big.Int).Mul(
+		new(big.Int).SetUint64(estimatedGas),
+		effectiveGasPrice,
+	)
+
+	gasCost.Mul(gasCost, big.NewInt(110))
+	gasCost.Div(gasCost, big.NewInt(100))
+
+	fmt.Println("ESTIMATED GAS:", estimatedGas)
+	fmt.Println("ESTIMATED GAS COST:", utils.FormatUnits(gasCost, big.NewInt(18)))
+	fmt.Println("TOTAL PROFIT:", utils.FormatUnits(totalProfit, big.NewInt(18)))
+
+	fmt.Println("ESTIMATED_GAS & TOTAL PROFIT :", estimatedGas, totalProfit)
+	fmt.Println("TOTAL PROFIT", utils.FormatUnits(totalProfit, big.NewInt(18)))
+
+	minProfit := constants.FEE_MAP[chainId]
+	if totalProfit.Cmp(&minProfit) < 0 && chainId != constants.BSCChainId {
+		fmt.Println("TOTAL PROFIT < FEEE", utils.FormatUnits(totalProfit, big.NewInt(18)), utils.FormatUnits(&minProfit, big.NewInt(18)))
+		//	return nil
+	}
+
+	if totalProfit.Cmp(gasCost) <= 0 {
+		fmt.Println("❌ Gas > Profit, abort", gasCost, totalProfit)
 		return nil
 	}
 
@@ -471,7 +488,7 @@ func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes
 		return err
 	}
 
-	fmt.Println("Tx sent:", tx.Hash().Hex())
+	fmt.Println("Tx sent:", chainId, tx.Hash().Hex())
 
 	// ⏳ confirm bekle
 	receipt, err := bind.WaitMined(context.Background(), evmClient, tx)
