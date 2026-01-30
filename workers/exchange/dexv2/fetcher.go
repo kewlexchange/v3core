@@ -227,11 +227,6 @@ func (d *DexV2Fetcher) ExecuteSwap(chainId models.ChainID, params coreTypes.ArbR
 		return nil
 	}
 
-	if chainId != constants.ChilizChainId {
-		fmt.Println("BSC/AVAX")
-		return nil
-	}
-
 	flashContract := constants.FlashContractMap[models.ChainID(chainId)]
 	privateKeyHex := os.Getenv("PRIVATE_KEY")
 	if privateKeyHex == "" {
@@ -298,40 +293,7 @@ func (d *DexV2Fetcher) ExecuteSwap(chainId models.ChainID, params coreTypes.ArbR
 		return nil
 	}
 	defer unlockFlash(flashParams)
-	/*
-		// ethclient, rpcClient ile sarmalanmış
-		ethClient := ethclient.NewClient(evmClient.Client())
 
-		parsedABI, err := abi.JSON(strings.NewReader(flash.FlashABI))
-		if err != nil {
-			log.Fatalf("Failed to parse ABI: %v", err)
-		}
-
-		// 2. handleFlash fonksiyonunu bul
-		method := parsedABI.Methods["handleFlash"]
-
-		// 4. Parametreleri encode et
-		encodedParams, err := method.Inputs.Pack(flashParams)
-		if err != nil {
-			log.Fatalf("Failed to pack params: %v", err)
-		}
-		data := append(method.ID, encodedParams...)
-
-		msg := ethereum.CallMsg{
-			To:   &common.Address{},
-			Data: data,
-		}
-
-
-		result, err := ethClient.CallContract(context.Background(), msg, nil)
-		if err != nil {
-			log.Fatalf("CallContract error: %v", err)
-		}
-
-		log.Printf("Result: %x", result)
-
-		fmt.Println("eth_call result:", result)
-	*/
 	fmt.Println("DX", params.Dx)
 	fmt.Println("Mid", params.Mid)
 	fmt.Println("Out", params.Out)
@@ -450,36 +412,36 @@ func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes
 		return err
 	}
 
+	tip, err := evmClient.SuggestGasTipCap(context.Background())
+	if err != nil {
+		return err
+	}
+
 	baseFee := header.BaseFee
-	priorityFee := big.NewInt(2_000_000) // 2 gwei (chain'e göre ayarlayabilirsin)
 
-	effectiveGasPrice := new(big.Int).Add(baseFee, priorityFee)
+	// next block baseFee tahmini (%12.5 artış worst case)
+	nextBaseFee := new(big.Int).Mul(baseFee, big.NewInt(1125))
+	nextBaseFee.Div(nextBaseFee, big.NewInt(1000))
 
-	gasCost := new(big.Int).Mul(
-		new(big.Int).SetUint64(estimatedGas),
-		effectiveGasPrice,
+	predictedGasPrice := new(big.Int).Add(nextBaseFee, tip)
+
+	// execution gas buffer
+	gasLimit := estimatedGas * 120 / 100
+
+	predictedCost := new(big.Int).Mul(
+		new(big.Int).SetUint64(gasLimit),
+		predictedGasPrice,
 	)
 
-	gasCost.Mul(gasCost, big.NewInt(110))
-	gasCost.Div(gasCost, big.NewInt(100))
-
-	fmt.Println("ESTIMATED GAS:", estimatedGas)
-	fmt.Println("ESTIMATED GAS COST:", utils.FormatUnits(gasCost, big.NewInt(18)))
-	fmt.Println("TOTAL PROFIT:", utils.FormatUnits(totalProfit, big.NewInt(18)))
-
-	fmt.Println("ESTIMATED_GAS & TOTAL PROFIT :", estimatedGas, totalProfit)
-	fmt.Println("TOTAL PROFIT", utils.FormatUnits(totalProfit, big.NewInt(18)))
-
-	minProfit := constants.FEE_MAP[chainId]
-	if totalProfit.Cmp(&minProfit) < 0 && chainId != constants.BSCChainId {
-		fmt.Println("TOTAL PROFIT < FEEE", utils.FormatUnits(totalProfit, big.NewInt(18)), utils.FormatUnits(&minProfit, big.NewInt(18)))
-		//	return nil
-	}
-
-	if totalProfit.Cmp(gasCost) <= 0 {
-		fmt.Println("❌ Gas > Profit, abort", gasCost, totalProfit)
+	defaultGas := constants.FEE_MAP[chainId]
+	if totalProfit.Cmp(&defaultGas) <= 0 {
+		fmt.Println("❌ Not profitable after gas", defaultGas, totalProfit, predictedCost)
 		return nil
 	}
+
+	auth.GasLimit = gasLimit
+	auth.GasFeeCap = predictedGasPrice
+	auth.GasTipCap = tip
 
 	tx, err := flashSwap.HandleSwapEx(auth, allSwapParams)
 	if err != nil {

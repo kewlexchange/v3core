@@ -18,9 +18,6 @@ func GetDOGEPairs() (pairs []models.TradingPair) {
 		Pair: *utils.AddressFromHex("0x1eF315fa08e0E1B116D97E3dFE0aF292Ed8b7f02")}) //KEWL
 
 	pairs = append(pairs, models.TradingPair{
-		Pair: *utils.AddressFromHex("0x302DbdACD7BCDCf288bd6342F9ffa5F31E8E6744")}) //KEWL
-
-	pairs = append(pairs, models.TradingPair{
 		Pair: *utils.AddressFromHex("0xb3432500334e8b08f12A66916912456Aad1c78C9")}) //KEWL
 
 	return pairs

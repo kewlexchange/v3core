@@ -9,6 +9,7 @@ import (
 	"core/workers/exchange/dexv2/scanner/avax"
 	"core/workers/exchange/dexv2/scanner/bsc"
 	"core/workers/exchange/dexv2/scanner/chiliz"
+	"fmt"
 	"log"
 	"sync/atomic"
 	"time"
@@ -39,7 +40,16 @@ func handleScan() {
 		avax.GetLINK(),
 		avax.GetSUSHI(),
 		avax.GetUSDTE(),
+		avax.GetSWAP(),
 		avax.GetDAI(),
+		avax.GetCNR(),
+		avax.GetSHRAP(),
+		avax.GetPEFI(),
+		avax.GetJEWEL(),
+		avax.GetCRA(),
+		avax.GetALOT(),
+		avax.GetAVXT(),
+		avax.GetYAK(),
 	}
 
 	scanParamsCHZ := []models.ScanParams{
@@ -61,7 +71,23 @@ func handleScan() {
 		bsc.GetC98(),
 		bsc.GetCEEK(),
 		bsc.GetDOGE(),
+		bsc.GetALPHA(),
+		bsc.GetAXS(),
+		bsc.GetALU(),
+		bsc.GetBABYDOGE(),
+		bsc.GetBMON(),
+		bsc.GetBNX(),
+		bsc.GetBSCPAD(),
+		bsc.GetBTTOLD(),
+		bsc.GetDPET(),
+		bsc.GetMBOX(),
+		bsc.GetINJ(),
+		bsc.GetONE(),
+		bsc.GetRACA(),
+		bsc.GetREEF(),
 	}
+
+	fmt.Println("Len", len(scanParamsAVAX), len(scanParamsCHZ), len(scanParamsBSC))
 
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
@@ -76,9 +102,10 @@ func handleScan() {
 		scanning.Store(true)
 		go func() {
 			defer scanning.Store(false)
-			go dexService.ScanPairsSwapAll(constants.AVAXChainID, scanParamsAVAX)
 			go dexService.ScanPairsSwapAll(constants.ChilizChainId, scanParamsCHZ)
-			go dexService.ScanPairsSwapAll(constants.BSCChainId, scanParamsBSC)
+
+			dexService.ScanPairsSwapAll(constants.AVAXChainID, scanParamsAVAX)
+			//dexService.ScanPairsSwapAll(constants.BSCChainId, scanParamsBSC)
 		}()
 	}
 }

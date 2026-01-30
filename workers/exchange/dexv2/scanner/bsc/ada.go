@@ -14,9 +14,6 @@ func GetADAPairs() (pairs []models.TradingPair) {
 	pairs = append(pairs, models.TradingPair{
 		Pair: *utils.AddressFromHex("0x8860922Eb2795aB0D57363653Dd7EBf18D7c0A42")}) //KEWL
 
-	pairs = append(pairs, models.TradingPair{
-		Pair: *utils.AddressFromHex("0x5165C82912b8EF4053770a9e488D5FE81A6e730E")}) //KEWL
-
 	return pairs
 }
 
