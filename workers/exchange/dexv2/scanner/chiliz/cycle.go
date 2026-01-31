@@ -46,24 +46,6 @@ func GetChilizCycle() (cycle []models.Cycle) {
 
 		{
 			InputToken: constants.WETH_MAP[constants.ChilizChainId][0],
-			Hops: []models.Hop{ //CHZINU -> PEPPERxCHZINU FAN -> DSWAP PEPPERxCHZ
-				{
-					Pair:        common.HexToAddress("0xf9168b29f8534a449b7eb796fac8c60fcaed5af0"), //CHZINUxwCHZ
-					OutputToken: common.HexToAddress("0xf3928e7871eb136dd6648ad08aeef6b6ea893001"), //CHZINU
-				},
-				{
-					Pair:        common.HexToAddress("0xd7716a59066a431d703f3fd9dd9ab1c5f694282f"), //CHZINUxPEPPER
-					OutputToken: common.HexToAddress("0x60f397acbcfb8f4e3234c659a3e10867e6fa6b67"), //PEPPER
-				},
-				{
-					Pair:        common.HexToAddress("0x59ae0cff65e648fecec8e539a6f6c89c337a48f1"), //DSWAP PEPPER CHZ
-					OutputToken: constants.WETH_MAP[constants.ChilizChainId][0],                    //CHZ
-				},
-			},
-		},
-
-		{
-			InputToken: constants.WETH_MAP[constants.ChilizChainId][0],
 			Hops: []models.Hop{ //CHZINU -> PEPPERxCHZINU -> FANX PEPPER CHZ
 				{
 					Pair:        common.HexToAddress("0xf9168b29f8534a449b7eb796fac8c60fcaed5af0"), //CHZINUxwCHZ
@@ -79,6 +61,29 @@ func GetChilizCycle() (cycle []models.Cycle) {
 				},
 			},
 		},
+		/*
+			{
+				InputToken: constants.WETH_MAP[constants.ChilizChainId][0],
+				Hops: []models.Hop{ //CHZINU -> PEPPERxCHZINU FAN -> DSWAP PEPPERxCHZ
+					{
+						Pair:        common.HexToAddress("0xf9168b29f8534a449b7eb796fac8c60fcaed5af0"), //CHZINUxwCHZ
+						OutputToken: common.HexToAddress("0xf3928e7871eb136dd6648ad08aeef6b6ea893001"), //CHZINU
+					},
+					{
+						Pair:        common.HexToAddress("0xd7716a59066a431d703f3fd9dd9ab1c5f694282f"), //CHZINUxPEPPER
+						OutputToken: common.HexToAddress("0x60f397acbcfb8f4e3234c659a3e10867e6fa6b67"), //PEPPER
+					},
+					{
+						Pair:        common.HexToAddress("0x3159a90f80fa4aeccc044923b7a504a98417145d"), //DSWAP x PEPPER
+						OutputToken: common.HexToAddress("0x2ebec8e89bb4b9c3681be4eaa85c391f1cd717ce"), //DSWAP
+					},
+					{
+						Pair:        common.HexToAddress("0xb0a8310f11be8dfeea4e200b9935b815f3faa2fa"), //DSWAP PEPPER
+						OutputToken: constants.WETH_MAP[constants.ChilizChainId][0],                    //CHZ
+					},
+				},
+			},
+		*/
 	}
 	return cycle
 }

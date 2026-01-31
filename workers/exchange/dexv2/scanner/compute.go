@@ -292,3 +292,61 @@ func FlashSearch(chainId models.ChainID, scan models.ScanParams, tradingPairs []
 	return &res
 
 }
+
+func TestCycle(chainId models.ChainID, params models.Cycle) error {
+
+	baseChainID := uniswapSDKConstants.ChainID(chainId)
+	quoteChainID := uniswapSDKConstants.ChainID(chainId)
+
+	var tradingPairs []*uniswapSDKEntities.Pair
+	var tradingPairsReversed []*uniswapSDKEntities.Pair
+
+	inputToken, inputTokenErr := uniswapSDKEntities.NewToken(baseChainID, params.InputToken, int(18), "NATIVE", "NATIVE")
+	if inputTokenErr != nil {
+		return nil
+	}
+
+	amount := new(big.Int).Mul(big.NewInt(100), big.NewInt(1e18))
+	inputAmount, _ := uniswapSDKEntities.NewTokenAmount(inputToken, amount)
+
+	fmt.Println("INPUT AMOUNT", inputAmount.ToSignificant(8))
+
+	for _, hop := range params.Hops {
+		tradingPair := hop.TradingPair
+		token0, token0Err := uniswapSDKEntities.NewToken(baseChainID, *tradingPair.BaseCurrency.Contract, int(tradingPair.BaseCurrency.Decimals.Int64()), "TOKEN0", "TOKEN0_NAME")
+		token1, token1Err := uniswapSDKEntities.NewToken(quoteChainID, *tradingPair.QuoteCurrency.Contract, int(tradingPair.QuoteCurrency.Decimals.Int64()), "TOKEN1", "TOKEN1_NAME")
+
+		if token0Err != nil || token1Err != nil {
+			fmt.Println("Token0 ya da Token1 hatali")
+			return nil
+		}
+
+		tokenAmount0, tokenAmount0Err := uniswapSDKEntities.NewTokenAmount(token0, tradingPair.BaseReserve)
+		tokenAmount1, tokenAmount1Err := uniswapSDKEntities.NewTokenAmount(token1, tradingPair.QuoteReserve)
+		if tokenAmount0Err != nil || tokenAmount1Err != nil {
+			fmt.Println("tokenAmount0Err ya da tokenAmount1Err hatali")
+			return nil
+		}
+
+		pair, pairErr := uniswapSDKEntities.NewPair(tokenAmount0, tokenAmount1, &tradingPair.Pair)
+		if pairErr != nil {
+			fmt.Println("pairErr hatali")
+			return nil
+		}
+
+		tradingPairs = append(tradingPairs, pair)
+		tradingPairsReversed = append([]*uniswapSDKEntities.Pair{pair}, tradingPairsReversed...)
+
+	}
+
+	routeAtoB, _ := uniswapSDKEntities.NewRoute(tradingPairs, inputToken, inputToken)
+	normalTrade, _ := uniswapSDKEntities.NewTrade(routeAtoB, inputAmount, constants.ExactInput)
+	routeBtoA, _ := uniswapSDKEntities.NewRoute(tradingPairs, inputToken, inputToken)
+
+	reversedTrade, _ := uniswapSDKEntities.NewTrade(routeBtoA, inputAmount, constants.ExactInput)
+
+	fmt.Println("NORMAL:INPUT AMOUNT", normalTrade.InputAmount().ToSignificant(8), " --- ", normalTrade.OutputAmount().ToSignificant(8))
+	fmt.Println("REVERSED:INPUT AMOUNT", reversedTrade.InputAmount().ToSignificant(8), " --- ", reversedTrade.OutputAmount().ToSignificant(8))
+
+	return nil
+}

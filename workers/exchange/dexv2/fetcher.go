@@ -439,6 +439,12 @@ func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes
 		return nil
 	}
 
+	if chainId == constants.BSCChainId {
+		fmt.Println("❌ ❌ ❌ ❌ ❌ FOUND FOUND FOUND FOUND FOUND FOUND FOUND FOUND")
+		return nil
+	}
+	fmt.Println("✅ ✅ ✅ ✅ ✅ ✅ FOUND FOUND FOUND FOUND FOUND FOUND FOUND FOUND")
+
 	auth.GasLimit = gasLimit
 	auth.GasFeeCap = predictedGasPrice
 	auth.GasTipCap = tip
@@ -469,6 +475,31 @@ func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes
 
 	fmt.Println("Flash TX:", tx.Hash().Hex())
 	return nil
+}
+
+func (d *DexV2Fetcher) FetchCycle(chainId models.ChainID, params models.Cycle) (models.Cycle, error) {
+
+	pairs := []models.TradingPair{}
+
+	for _, hop := range params.Hops {
+		if hop.TradingPair == nil {
+			hop.TradingPair = &models.TradingPair{}
+		}
+		hop.TradingPair.Pair = hop.Pair
+		pairs = append(pairs, *hop.TradingPair)
+	}
+	pairs, pairErr := d.FetchReserves(chainId, pairs)
+	if pairErr != nil {
+		fmt.Println("FetchCycle, FetchReserves error")
+		return params, pairErr
+	}
+
+	for i, pair := range pairs {
+		if params.Hops[i].Pair == pair.Pair {
+			params.Hops[i].TradingPair = &pairs[i]
+		}
+	}
+	return params, nil
 }
 
 /*

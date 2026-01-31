@@ -1,0 +1,332 @@
+[
+  {
+    "InputToken": "0x677f7e16c7dd57be1d4c8ad1244883214953dc47",
+    "Hops": [
+      {
+        "TradingPair": {
+          "BaseCurrency": {
+            "Symbol": "",
+            "Decimals": 18,
+            "Contract": "0x677f7e16c7dd57be1d4c8ad1244883214953dc47"
+          },
+          "QuoteCurrency": {
+            "Symbol": "",
+            "Decimals": 4,
+            "Contract": "0xf3928e7871eb136dd6648ad08aeef6b6ea893001"
+          },
+          "Pair": "0xf9168b29f8534a449b7eb796fac8c60fcaed5af0",
+          "Base": "0x677F7e16C7Dd57be1D4C8aD1244883214953DC47",
+          "Quote": "0xF3928e7871eb136DD6648Ad08aEEF6B6ea893001",
+          "BasePrice": "4795.029880042464300399",
+          "QuotePrice": "0.000208549273939278",
+          "BasePriceUSD": null,
+          "QuotePriceUSD": null,
+          "BasePriceNative": null,
+          "QuotePriceNative": null,
+          "BaseReserve": 272559711926680620082106,
+          "QuoteReserve": 13069319627842,
+          "BaseReserveStr": "272559.711926680620082106",
+          "QuoteReserveStr": "1306931962.7842",
+          "BaseDecimals": 18,
+          "QuoteDecimals": 4,
+          "Symbol": "",
+          "DisplayName": null,
+          "Logo": null,
+          "IsEnabled": true
+        },
+        "Pair": "0xf9168b29f8534a449b7eb796fac8c60fcaed5af0",
+        "OutputToken": "0xf3928e7871eb136dd6648ad08aeef6b6ea893001"
+      },
+      {
+        "TradingPair": {
+          "BaseCurrency": {
+            "Symbol": "",
+            "Decimals": 18,
+            "Contract": "0x476ef844b3e8318b3bc887a7db07a1a0fede5557"
+          },
+          "QuoteCurrency": {
+            "Symbol": "",
+            "Decimals": 4,
+            "Contract": "0xf3928e7871eb136dd6648ad08aeef6b6ea893001"
+          },
+          "Pair": "0x2112edcd1fb2026d46f09085ce26d1fdc0d8c467",
+          "Base": "0x476eF844B3E8318b3bc887a7db07a1A0FEde5557",
+          "Quote": "0xF3928e7871eb136DD6648Ad08aEEF6B6ea893001",
+          "BasePrice": "79730.917442321537856986",
+          "QuotePrice": "0.000012542186043744",
+          "BasePriceUSD": null,
+          "QuotePriceUSD": null,
+          "BasePriceNative": null,
+          "QuotePriceNative": null,
+          "BaseReserve": 2181764788121757632269,
+          "QuoteReserve": 1739541082003,
+          "BaseReserveStr": "2181.764788121757632269",
+          "QuoteReserveStr": "173954108.2003",
+          "BaseDecimals": 18,
+          "QuoteDecimals": 4,
+          "Symbol": "",
+          "DisplayName": null,
+          "Logo": null,
+          "IsEnabled": true
+        },
+        "Pair": "0x2112edcd1fb2026d46f09085ce26d1fdc0d8c467",
+        "OutputToken": "0x476ef844b3e8318b3bc887a7db07a1a0fede5557"
+      },
+      {
+        "TradingPair": {
+          "BaseCurrency": {
+            "Symbol": "",
+            "Decimals": 18,
+            "Contract": "0x476ef844b3e8318b3bc887a7db07a1a0fede5557"
+          },
+          "QuoteCurrency": {
+            "Symbol": "",
+            "Decimals": 18,
+            "Contract": "0x677f7e16c7dd57be1d4c8ad1244883214953dc47"
+          },
+          "Pair": "0xea844079241c84fae62648c380a38b913d86e7cf",
+          "Base": "0x476eF844B3E8318b3bc887a7db07a1A0FEde5557",
+          "Quote": "0x677F7e16C7Dd57be1D4C8aD1244883214953DC47",
+          "BasePrice": "16.818730932706442074",
+          "QuotePrice": "0.059457518168350986",
+          "BasePriceUSD": null,
+          "QuotePriceUSD": null,
+          "BasePriceNative": null,
+          "QuotePriceNative": null,
+          "BaseReserve": 125267205366435612353039,
+          "QuoteReserve": 2106835421750161052423637,
+          "BaseReserveStr": "125267.205366435612353039",
+          "QuoteReserveStr": "2106835.421750161052423637",
+          "BaseDecimals": 18,
+          "QuoteDecimals": 18,
+          "Symbol": "",
+          "DisplayName": null,
+          "Logo": null,
+          "IsEnabled": true
+        },
+        "Pair": "0xea844079241c84fae62648c380a38b913d86e7cf",
+        "OutputToken": "0x677f7e16c7dd57be1d4c8ad1244883214953dc47"
+      }
+    ]
+  },
+  {
+    "InputToken": "0x677f7e16c7dd57be1d4c8ad1244883214953dc47",
+    "Hops": [
+      {
+        "TradingPair": {
+          "BaseCurrency": {
+            "Symbol": "",
+            "Decimals": 18,
+            "Contract": "0x677f7e16c7dd57be1d4c8ad1244883214953dc47"
+          },
+          "QuoteCurrency": {
+            "Symbol": "",
+            "Decimals": 4,
+            "Contract": "0xf3928e7871eb136dd6648ad08aeef6b6ea893001"
+          },
+          "Pair": "0xf9168b29f8534a449b7eb796fac8c60fcaed5af0",
+          "Base": "0x677F7e16C7Dd57be1D4C8aD1244883214953DC47",
+          "Quote": "0xF3928e7871eb136DD6648Ad08aEEF6B6ea893001",
+          "BasePrice": "4795.029880042464300399",
+          "QuotePrice": "0.000208549273939278",
+          "BasePriceUSD": null,
+          "QuotePriceUSD": null,
+          "BasePriceNative": null,
+          "QuotePriceNative": null,
+          "BaseReserve": 272559711926680620082106,
+          "QuoteReserve": 13069319627842,
+          "BaseReserveStr": "272559.711926680620082106",
+          "QuoteReserveStr": "1306931962.7842",
+          "BaseDecimals": 18,
+          "QuoteDecimals": 4,
+          "Symbol": "",
+          "DisplayName": null,
+          "Logo": null,
+          "IsEnabled": true
+        },
+        "Pair": "0xf9168b29f8534a449b7eb796fac8c60fcaed5af0",
+        "OutputToken": "0xf3928e7871eb136dd6648ad08aeef6b6ea893001"
+      },
+      {
+        "TradingPair": {
+          "BaseCurrency": {
+            "Symbol": "",
+            "Decimals": 18,
+            "Contract": "0x60f397acbcfb8f4e3234c659a3e10867e6fa6b67"
+          },
+          "QuoteCurrency": {
+            "Symbol": "",
+            "Decimals": 4,
+            "Contract": "0xf3928e7871eb136dd6648ad08aeef6b6ea893001"
+          },
+          "Pair": "0xd7716a59066a431d703f3fd9dd9ab1c5f694282f",
+          "Base": "0x60F397acBCfB8f4e3234C659A3E10867e6fA6b67",
+          "Quote": "0xF3928e7871eb136DD6648Ad08aEEF6B6ea893001",
+          "BasePrice": "0.000114987413687836",
+          "QuotePrice": "8696.603984108781205449",
+          "BasePriceUSD": null,
+          "QuotePriceUSD": null,
+          "BasePriceNative": null,
+          "QuotePriceNative": null,
+          "BaseReserve": 532775600370605003934656383681,
+          "QuoteReserve": 612624883626,
+          "BaseReserveStr": "532775600370.605003934656383681",
+          "QuoteReserveStr": "61262488.3626",
+          "BaseDecimals": 18,
+          "QuoteDecimals": 4,
+          "Symbol": "",
+          "DisplayName": null,
+          "Logo": null,
+          "IsEnabled": true
+        },
+        "Pair": "0xd7716a59066a431d703f3fd9dd9ab1c5f694282f",
+        "OutputToken": "0x60f397acbcfb8f4e3234c659a3e10867e6fa6b67"
+      },
+      {
+        "TradingPair": {
+          "BaseCurrency": {
+            "Symbol": "",
+            "Decimals": 18,
+            "Contract": "0x60f397acbcfb8f4e3234c659a3e10867e6fa6b67"
+          },
+          "QuoteCurrency": {
+            "Symbol": "",
+            "Decimals": 18,
+            "Contract": "0x677f7e16c7dd57be1d4c8ad1244883214953dc47"
+          },
+          "Pair": "0x5f3efab95224dbb5490e8ddc8d2c1daad4c0db37",
+          "Base": "0x60F397acBCfB8f4e3234C659A3E10867e6fA6b67",
+          "Quote": "0x677F7e16C7Dd57be1D4C8aD1244883214953DC47",
+          "BasePrice": "0.00000002435280315",
+          "QuotePrice": "41063034.668036686143926236",
+          "BasePriceUSD": null,
+          "QuotePriceUSD": null,
+          "BasePriceNative": null,
+          "QuotePriceNative": null,
+          "BaseReserve": 186466436765117220253573419970006,
+          "QuoteReserve": 4540980428566863883203071,
+          "BaseReserveStr": "186466436765117.220253573419970006",
+          "QuoteReserveStr": "4540980.428566863883203071",
+          "BaseDecimals": 18,
+          "QuoteDecimals": 18,
+          "Symbol": "",
+          "DisplayName": null,
+          "Logo": null,
+          "IsEnabled": true
+        },
+        "Pair": "0x5f3efab95224dbb5490e8ddc8d2c1daad4c0db37",
+        "OutputToken": "0x677f7e16c7dd57be1d4c8ad1244883214953dc47"
+      }
+    ]
+  },
+  {
+    "InputToken": "0x677f7e16c7dd57be1d4c8ad1244883214953dc47",
+    "Hops": [
+      {
+        "TradingPair": {
+          "BaseCurrency": {
+            "Symbol": "",
+            "Decimals": 18,
+            "Contract": "0x677f7e16c7dd57be1d4c8ad1244883214953dc47"
+          },
+          "QuoteCurrency": {
+            "Symbol": "",
+            "Decimals": 4,
+            "Contract": "0xf3928e7871eb136dd6648ad08aeef6b6ea893001"
+          },
+          "Pair": "0xf9168b29f8534a449b7eb796fac8c60fcaed5af0",
+          "Base": "0x677F7e16C7Dd57be1D4C8aD1244883214953DC47",
+          "Quote": "0xF3928e7871eb136DD6648Ad08aEEF6B6ea893001",
+          "BasePrice": "4795.029880042464300399",
+          "QuotePrice": "0.000208549273939278",
+          "BasePriceUSD": null,
+          "QuotePriceUSD": null,
+          "BasePriceNative": null,
+          "QuotePriceNative": null,
+          "BaseReserve": 272559711926680620082106,
+          "QuoteReserve": 13069319627842,
+          "BaseReserveStr": "272559.711926680620082106",
+          "QuoteReserveStr": "1306931962.7842",
+          "BaseDecimals": 18,
+          "QuoteDecimals": 4,
+          "Symbol": "",
+          "DisplayName": null,
+          "Logo": null,
+          "IsEnabled": true
+        },
+        "Pair": "0xf9168b29f8534a449b7eb796fac8c60fcaed5af0",
+        "OutputToken": "0xf3928e7871eb136dd6648ad08aeef6b6ea893001"
+      },
+      {
+        "TradingPair": {
+          "BaseCurrency": {
+            "Symbol": "",
+            "Decimals": 18,
+            "Contract": "0x60f397acbcfb8f4e3234c659a3e10867e6fa6b67"
+          },
+          "QuoteCurrency": {
+            "Symbol": "",
+            "Decimals": 4,
+            "Contract": "0xf3928e7871eb136dd6648ad08aeef6b6ea893001"
+          },
+          "Pair": "0xd7716a59066a431d703f3fd9dd9ab1c5f694282f",
+          "Base": "0x60F397acBCfB8f4e3234C659A3E10867e6fA6b67",
+          "Quote": "0xF3928e7871eb136DD6648Ad08aEEF6B6ea893001",
+          "BasePrice": "0.000114987413687836",
+          "QuotePrice": "8696.603984108781205449",
+          "BasePriceUSD": null,
+          "QuotePriceUSD": null,
+          "BasePriceNative": null,
+          "QuotePriceNative": null,
+          "BaseReserve": 532775600370605003934656383681,
+          "QuoteReserve": 612624883626,
+          "BaseReserveStr": "532775600370.605003934656383681",
+          "QuoteReserveStr": "61262488.3626",
+          "BaseDecimals": 18,
+          "QuoteDecimals": 4,
+          "Symbol": "",
+          "DisplayName": null,
+          "Logo": null,
+          "IsEnabled": true
+        },
+        "Pair": "0xd7716a59066a431d703f3fd9dd9ab1c5f694282f",
+        "OutputToken": "0x60f397acbcfb8f4e3234c659a3e10867e6fa6b67"
+      },
+      {
+        "TradingPair": {
+          "BaseCurrency": {
+            "Symbol": "",
+            "Decimals": 18,
+            "Contract": "0x60f397acbcfb8f4e3234c659a3e10867e6fa6b67"
+          },
+          "QuoteCurrency": {
+            "Symbol": "",
+            "Decimals": 18,
+            "Contract": "0x677f7e16c7dd57be1d4c8ad1244883214953dc47"
+          },
+          "Pair": "0x5f3efab95224dbb5490e8ddc8d2c1daad4c0db37",
+          "Base": "0x60F397acBCfB8f4e3234C659A3E10867e6fA6b67",
+          "Quote": "0x677F7e16C7Dd57be1D4C8aD1244883214953DC47",
+          "BasePrice": "0.00000002435280315",
+          "QuotePrice": "41063034.668036686143926236",
+          "BasePriceUSD": null,
+          "QuotePriceUSD": null,
+          "BasePriceNative": null,
+          "QuotePriceNative": null,
+          "BaseReserve": 186466436765117220253573419970006,
+          "QuoteReserve": 4540980428566863883203071,
+          "BaseReserveStr": "186466436765117.220253573419970006",
+          "QuoteReserveStr": "4540980.428566863883203071",
+          "BaseDecimals": 18,
+          "QuoteDecimals": 18,
+          "Symbol": "",
+          "DisplayName": null,
+          "Logo": null,
+          "IsEnabled": true
+        },
+        "Pair": "0x5f3efab95224dbb5490e8ddc8d2c1daad4c0db37",
+        "OutputToken": "0x677f7e16c7dd57be1d4c8ad1244883214953dc47"
+      }
+    ]
+  }
+]

@@ -187,3 +187,34 @@ func (s *PairService) ScanPairsSwapAll(chainId models.ChainID, params []models.S
 	}
 	s.ArbitrageAll(chainId, &allSwapParams)
 }
+
+func (s *PairService) FetchCycles(chainId models.ChainID, params []models.Cycle) ([]models.Cycle, error) {
+	var wg sync.WaitGroup
+	mu := &sync.Mutex{}          // pairs slice erişimi için mutex
+	allPairs := []models.Cycle{} // veya pairs'in tipi neyse onu kullan
+
+	for _, cycle := range params {
+		wg.Add(1)
+		exCopy := cycle
+		s.pool.Submit(func() {
+			defer wg.Done()
+			pairs, err := s.fetcher.FetchCycle(chainId, cycle)
+			if err != nil {
+				log.Printf("error fetching for %s: %v", exCopy.InputToken, err)
+				return
+			}
+
+			mu.Lock()
+			allPairs = append(allPairs, pairs)
+			mu.Unlock()
+
+			log.Printf("cycles received %d pairs from %s")
+		})
+	}
+
+	wg.Wait() // tüm fetch işlemleri bitene kadar bekle
+
+	s.SaveJSONToFile("output", "all_cycles", allPairs)
+
+	return allPairs, nil
+}
