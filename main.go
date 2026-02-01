@@ -2,29 +2,20 @@ package main
 
 import (
 	"context"
-	"core/constants"
-	"core/models"
-	"core/services"
 	blockchains "core/services/blockchains"
-	"core/workers"
-	dexWorkers "core/workers/exchange/dexv2"
-	dexScanner "core/workers/exchange/dexv2/scanner"
 
-	"core/workers/exchange/dexv2/scanner/avax"
-	"core/workers/exchange/dexv2/scanner/bsc"
-	"core/workers/exchange/dexv2/scanner/chiliz"
 	"fmt"
 
 	"log"
 	"os"
 	"os/signal"
-	"sync/atomic"
 	"syscall"
 	"time"
 
 	"github.com/joho/godotenv"
 )
 
+/*
 func handleScan() {
 	pool := workers.NewWorkerPool(50)
 
@@ -118,6 +109,7 @@ func handleScan() {
 	}
 }
 
+
 func handleFetchCycles() {
 
 	pool := workers.NewWorkerPool(50)
@@ -135,7 +127,7 @@ func handleFetchCycles() {
 		dexScanner.TestCycle(constants.ChilizChainId, cycle)
 	}
 
-}
+}*/
 
 func main() {
 	err := godotenv.Load(".env")

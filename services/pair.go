@@ -167,7 +167,7 @@ func (s *PairService) ScanPairSwapSingle(chainId models.ChainID, params []models
 	}
 }
 
-func (s *PairService) ScanPairsSwapAll(chainId models.ChainID, params []models.ScanParams) {
+func (s *PairService) ScanPairsSwapAllEx(chainId models.ChainID, params []models.ScanParams) {
 	fmt.Println("Scanner", chainId)
 
 	allSwapParams := []coreTypes.ArbResult{}
@@ -185,6 +185,48 @@ func (s *PairService) ScanPairsSwapAll(chainId models.ChainID, params []models.S
 			}
 		}
 	}
+	s.ArbitrageAll(chainId, &allSwapParams)
+}
+
+func (s *PairService) ScanPairsSwapAll(chainId models.ChainID, params []models.ScanParams) {
+	fmt.Println("Scanner", chainId)
+
+	var wg sync.WaitGroup
+	resultChan := make(chan coreTypes.ArbResult, len(params))
+
+	workerLimit := 8 // RPC kapasitesine göre ayarla
+	sem := make(chan struct{}, workerLimit)
+
+	for _, param := range params {
+		wg.Add(1)
+
+		go func(p models.ScanParams) {
+			defer wg.Done()
+
+			sem <- struct{}{}        // acquire
+			defer func() { <-sem }() // release
+
+			pairs, err := s.fetcher.FetchReserves(chainId, p.Pairs)
+			if err != nil {
+				log.Printf("error fetching for %s: %v", p.Token, err)
+				return
+			}
+
+			res := scanner.FlashSearch(chainId, p, pairs)
+			if res != nil && res.Exists {
+				resultChan <- *res
+			}
+		}(param)
+	}
+
+	wg.Wait()
+	close(resultChan)
+
+	allSwapParams := make([]coreTypes.ArbResult, 0)
+	for r := range resultChan {
+		allSwapParams = append(allSwapParams, r)
+	}
+
 	s.ArbitrageAll(chainId, &allSwapParams)
 }
 

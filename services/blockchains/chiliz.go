@@ -8,6 +8,7 @@ import (
 	"core/workers"
 	dexWorkers "core/workers/exchange/dexv2"
 	"core/workers/exchange/dexv2/scanner/chiliz"
+	"fmt"
 	"log"
 	"math/big"
 	"strings"
@@ -108,6 +109,8 @@ func (s *ChilizScanner) Start(ctx context.Context) error {
 			// indexed alanlar topics'ten
 			transferEvent.From = common.HexToAddress(vLog.Topics[1].Hex())
 			transferEvent.To = common.HexToAddress(vLog.Topics[2].Hex())
+
+			fmt.Println("GelenTxHash", vLog.TxHash)
 
 			/*
 				log.Printf("[BSCScanner] WBNB Transfer detected: From %s To %s Value %s TxHash %s",
