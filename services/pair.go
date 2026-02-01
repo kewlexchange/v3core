@@ -250,7 +250,7 @@ func (s *PairService) FetchCycles(chainId models.ChainID, params []models.Cycle)
 			allPairs = append(allPairs, pairs)
 			mu.Unlock()
 
-			log.Printf("cycles received %d pairs from %s")
+			log.Printf("cycles received")
 		})
 	}
 
