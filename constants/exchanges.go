@@ -115,6 +115,12 @@ func GetExchangeByName(name string, chainId models.ChainID) (*models.Exchange, e
 var FEE_MAP = map[models.ChainID]big.Int{
 
 	models.Chiliz:    *big.NewInt(350000000000000000),
-	models.Avalanche: *big.NewInt(250000000000000),
+	models.Avalanche: *big.NewInt(8000000000000000),
 	models.BSC:       *big.NewInt(7000000000000),
+}
+
+var MIN_PROFIT = map[models.ChainID]*big.Int{
+	models.Chiliz:    big.NewInt(1000000000000000000),
+	models.Avalanche: big.NewInt(500000000000000),
+	models.BSC:       big.NewInt(500000000000000),
 }

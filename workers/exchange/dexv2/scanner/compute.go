@@ -6,7 +6,6 @@ import (
 	uniswapSDKConstants "core/sdk/uniswap/constants"
 	uniswapSDKEntities "core/sdk/uniswap/entities"
 	coreTypes "core/types"
-	"core/utils"
 	"fmt"
 	"math/big"
 
@@ -266,11 +265,11 @@ func FlashSearch(chainId models.ChainID, scan models.ScanParams, tradingPairs []
 			res.Mid = tradeA.OutputAmount().Raw()
 			res.Out = tradeB.OutputAmount().Raw()
 
-			fmt.Println("ISLEM ->", tradeA.InputAmount().ToSignificant(8), tradeA.OutputAmount().ToSignificant(8), tradeB.OutputAmount().ToSignificant(8))
+			//fmt.Println("ISLEM ->", tradeA.InputAmount().ToSignificant(8), tradeA.OutputAmount().ToSignificant(8), tradeB.OutputAmount().ToSignificant(8))
 
-			fmt.Println("INPUT ->", res.TokenInput.Address, res.TokenOutput.Address)
+			//fmt.Println("INPUT ->", res.TokenInput.Address, res.TokenOutput.Address)
 
-			fmt.Println("ROTA -> ", chainId, res.Side, expensivePair.Address.Hex(), cheapPair.Address.Hex())
+			//	fmt.Println("ROTA -> ", chainId, res.Side, expensivePair.Address.Hex(), cheapPair.Address.Hex())
 
 			res.Path = []common.Address{
 				*expensivePair.Address,
@@ -285,7 +284,6 @@ func FlashSearch(chainId models.ChainID, scan models.ScanParams, tradingPairs []
 	res.Repay = res.TokenInput.Address   // CHZ
 	if res.Out.Cmp(res.Dx) > 0 {
 		res.Exists = true
-		fmt.Println("EXECUTION PROFIT", utils.FormatUnits(res.Profit, big.NewInt(18)), res.Dx, res.Out, res.TokenInput.Address, res.TokenOutput.Address)
 	}
 
 	//res.Exists = false
@@ -309,7 +307,7 @@ func TestCycle(chainId models.ChainID, params models.Cycle) error {
 	amount := new(big.Int).Mul(big.NewInt(100), big.NewInt(1e18))
 	inputAmount, _ := uniswapSDKEntities.NewTokenAmount(inputToken, amount)
 
-	fmt.Println("INPUT AMOUNT", inputAmount.ToSignificant(8))
+	//fmt.Println("INPUT AMOUNT", inputAmount.ToSignificant(8))
 
 	for _, hop := range params.Hops {
 		tradingPair := hop.TradingPair

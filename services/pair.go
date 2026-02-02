@@ -194,7 +194,7 @@ func (s *PairService) ScanPairsSwapAll(chainId models.ChainID, params []models.S
 	var wg sync.WaitGroup
 	resultChan := make(chan coreTypes.ArbResult, len(params))
 
-	workerLimit := 8 // RPC kapasitesine göre ayarla
+	workerLimit := 28 // RPC kapasitesine göre ayarla
 	sem := make(chan struct{}, workerLimit)
 
 	for _, param := range params {

@@ -13,6 +13,7 @@ import (
 	"core/workers/exchange/dexv2/contracts/v2Factory"
 	"crypto/ecdsa"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"math/big"
@@ -294,13 +295,7 @@ func (d *DexV2Fetcher) ExecuteSwap(chainId models.ChainID, params coreTypes.ArbR
 	}
 	defer unlockFlash(flashParams)
 
-	fmt.Println("DX", params.Dx)
-	fmt.Println("Mid", params.Mid)
-	fmt.Println("Out", params.Out)
-	fmt.Println("Borrow", params.Borrow)
-	fmt.Println("Repay", params.Repay)
-	fmt.Println("Pair0", params.Path[0].Hex())
-	fmt.Println("Pair1", params.Path[1].Hex())
+	//gas hesabi
 
 	tx, err := flashSwap.HandleSwap(auth, flashParams)
 	if err != nil {
@@ -387,8 +382,15 @@ func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes
 		}
 	}
 
+	if totalProfit.Cmp(constants.MIN_PROFIT[chainId]) <= 0 {
+		fmt.Println("LESS PROFIT", chainId, utils.FormatUnits(totalProfit, big.NewInt(18)))
+		return errors.New("MIN PROFIT")
+	}
+
 	estimateAuth := *auth
 	estimateAuth.NoSend = true
+
+	fmt.Println("TOTAL PROFIT", utils.FormatUnits(totalProfit, big.NewInt(18)), "ISLEM", len(allSwapParams), "CHAIN", chainId)
 
 	txPreview, err := flashSwap.HandleSwapEx(&estimateAuth, allSwapParams)
 	if err != nil {
@@ -433,16 +435,14 @@ func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes
 		predictedGasPrice,
 	)
 
+	fmt.Println("TOTAL PROFIT", utils.FormatUnits(totalProfit, big.NewInt(18)), "GAS : ", utils.FormatUnits(predictedCost, big.NewInt(18)), "ISLEM", len(allSwapParams), "CHAIN", chainId)
+
 	defaultGas := constants.FEE_MAP[chainId]
 	if totalProfit.Cmp(&defaultGas) <= 0 {
-		fmt.Println("❌ Not profitable after gas", defaultGas, totalProfit, predictedCost)
+		fmt.Println("❌ Not profitable after gas")
 		return nil
 	}
 
-	if chainId == constants.BSCChainId {
-		fmt.Println("❌ ❌ ❌ ❌ ❌ FOUND FOUND FOUND FOUND FOUND FOUND FOUND FOUND")
-		return nil
-	}
 	fmt.Println("✅ ✅ ✅ ✅ ✅ ✅ FOUND FOUND FOUND FOUND FOUND FOUND FOUND FOUND")
 
 	auth.GasLimit = gasLimit

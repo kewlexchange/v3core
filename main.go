@@ -2,8 +2,13 @@ package main
 
 import (
 	"context"
+	"core/constants"
+	"core/services"
 	blockchains "core/services/blockchains"
-
+	"core/workers"
+	dexWorkers "core/workers/exchange/dexv2"
+	dexScanner "core/workers/exchange/dexv2/scanner"
+	"core/workers/exchange/dexv2/scanner/chiliz"
 	"fmt"
 
 	"log"
@@ -108,7 +113,7 @@ func handleScan() {
 		}()
 	}
 }
-
+*/
 
 func handleFetchCycles() {
 
@@ -127,9 +132,10 @@ func handleFetchCycles() {
 		dexScanner.TestCycle(constants.ChilizChainId, cycle)
 	}
 
-}*/
+}
 
 func main() {
+
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
@@ -173,7 +179,6 @@ func main() {
 	}()
 
 	go func() {
-		return
 		if err := bscScanner.Start(bscCtx); err != nil {
 			log.Printf("bscScanner scanner error: %v", err)
 		}
