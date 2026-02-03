@@ -6,7 +6,7 @@ import (
 	uniswapSDKConstants "core/sdk/uniswap/constants"
 	uniswapSDKEntities "core/sdk/uniswap/entities"
 	coreTypes "core/types"
-	"fmt"
+	"log"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -161,7 +161,7 @@ func FlashSearch(chainId models.ChainID, scan models.ScanParams, tradingPairs []
 		token1, token1Err := uniswapSDKEntities.NewToken(quoteChainID, *tradingPair.QuoteCurrency.Contract, int(tradingPair.QuoteCurrency.Decimals.Int64()), "TOKEN1", "TOKEN1_NAME")
 
 		if token0Err != nil || token1Err != nil {
-			fmt.Println("Token0 ya da Token1 hatali")
+			log.Println("Token0 ya da Token1 hatali")
 			return nil
 		}
 
@@ -169,13 +169,13 @@ func FlashSearch(chainId models.ChainID, scan models.ScanParams, tradingPairs []
 		tokenAmount1, tokenAmount1Err := uniswapSDKEntities.NewTokenAmount(token1, tradingPair.QuoteReserve)
 
 		if tokenAmount0Err != nil || tokenAmount1Err != nil {
-			fmt.Println("tokenAmount0Err ya da tokenAmount1Err hatali")
+			log.Println("tokenAmount0Err ya da tokenAmount1Err hatali")
 			return nil
 		}
 
 		pair, pairErr := uniswapSDKEntities.NewPair(tokenAmount0, tokenAmount1, &tradingPair.Pair)
 		if pairErr != nil {
-			fmt.Println("pairErr hatali")
+			log.Println("pairErr hatali")
 			return nil
 		}
 
@@ -253,7 +253,7 @@ func FlashSearch(chainId models.ChainID, scan models.ScanParams, tradingPairs []
 				*expensivePair.Address,
 			}
 
-			fmt.Println("CODER 1")
+			log.Println("CODER 1")
 		} else {
 			inputAmount, _ := uniswapSDKEntities.NewTokenAmount(res.TokenInput, res.Dx)
 			routeA, _ := uniswapSDKEntities.NewRoute([]*uniswapSDKEntities.Pair{expensivePair}, res.TokenInput, res.TokenOutput)
@@ -265,11 +265,11 @@ func FlashSearch(chainId models.ChainID, scan models.ScanParams, tradingPairs []
 			res.Mid = tradeA.OutputAmount().Raw()
 			res.Out = tradeB.OutputAmount().Raw()
 
-			//fmt.Println("ISLEM ->", tradeA.InputAmount().ToSignificant(8), tradeA.OutputAmount().ToSignificant(8), tradeB.OutputAmount().ToSignificant(8))
+			//log.Println("ISLEM ->", tradeA.InputAmount().ToSignificant(8), tradeA.OutputAmount().ToSignificant(8), tradeB.OutputAmount().ToSignificant(8))
 
-			//fmt.Println("INPUT ->", res.TokenInput.Address, res.TokenOutput.Address)
+			//log.Println("INPUT ->", res.TokenInput.Address, res.TokenOutput.Address)
 
-			//	fmt.Println("ROTA -> ", chainId, res.Side, expensivePair.Address.Hex(), cheapPair.Address.Hex())
+			//	log.Println("ROTA -> ", chainId, res.Side, expensivePair.Address.Hex(), cheapPair.Address.Hex())
 
 			res.Path = []common.Address{
 				*expensivePair.Address,
@@ -285,6 +285,8 @@ func FlashSearch(chainId models.ChainID, scan models.ScanParams, tradingPairs []
 	if res.Out.Cmp(res.Dx) > 0 {
 		res.Exists = true
 	}
+
+	log.Println("HERE")
 
 	//res.Exists = false
 	return &res
@@ -307,7 +309,7 @@ func TestCycle(chainId models.ChainID, params models.Cycle) error {
 	amount := new(big.Int).Mul(big.NewInt(100), big.NewInt(1e18))
 	inputAmount, _ := uniswapSDKEntities.NewTokenAmount(inputToken, amount)
 
-	//fmt.Println("INPUT AMOUNT", inputAmount.ToSignificant(8))
+	//log.Println("INPUT AMOUNT", inputAmount.ToSignificant(8))
 
 	for _, hop := range params.Hops {
 		tradingPair := hop.TradingPair
@@ -315,20 +317,20 @@ func TestCycle(chainId models.ChainID, params models.Cycle) error {
 		token1, token1Err := uniswapSDKEntities.NewToken(quoteChainID, *tradingPair.QuoteCurrency.Contract, int(tradingPair.QuoteCurrency.Decimals.Int64()), "TOKEN1", "TOKEN1_NAME")
 
 		if token0Err != nil || token1Err != nil {
-			fmt.Println("Token0 ya da Token1 hatali")
+			log.Println("Token0 ya da Token1 hatali")
 			return nil
 		}
 
 		tokenAmount0, tokenAmount0Err := uniswapSDKEntities.NewTokenAmount(token0, tradingPair.BaseReserve)
 		tokenAmount1, tokenAmount1Err := uniswapSDKEntities.NewTokenAmount(token1, tradingPair.QuoteReserve)
 		if tokenAmount0Err != nil || tokenAmount1Err != nil {
-			fmt.Println("tokenAmount0Err ya da tokenAmount1Err hatali")
+			log.Println("tokenAmount0Err ya da tokenAmount1Err hatali")
 			return nil
 		}
 
 		pair, pairErr := uniswapSDKEntities.NewPair(tokenAmount0, tokenAmount1, &tradingPair.Pair)
 		if pairErr != nil {
-			fmt.Println("pairErr hatali")
+			log.Println("pairErr hatali")
 			return nil
 		}
 
@@ -343,8 +345,8 @@ func TestCycle(chainId models.ChainID, params models.Cycle) error {
 
 	reversedTrade, _ := uniswapSDKEntities.NewTrade(routeBtoA, inputAmount, constants.ExactInput)
 
-	fmt.Println("NORMAL:INPUT AMOUNT", normalTrade.InputAmount().ToSignificant(8), " --- ", normalTrade.OutputAmount().ToSignificant(8))
-	fmt.Println("REVERSED:INPUT AMOUNT", reversedTrade.InputAmount().ToSignificant(8), " --- ", reversedTrade.OutputAmount().ToSignificant(8))
+	log.Println("NORMAL:INPUT AMOUNT", normalTrade.InputAmount().ToSignificant(8), " --- ", normalTrade.OutputAmount().ToSignificant(8))
+	log.Println("REVERSED:INPUT AMOUNT", reversedTrade.InputAmount().ToSignificant(8), " --- ", reversedTrade.OutputAmount().ToSignificant(8))
 
 	return nil
 }

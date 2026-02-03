@@ -15,6 +15,7 @@ var SwapMethodIDs = map[string]struct{}{
 	"fb3bdb41": {}, // swapETHForExactTokens
 	"0000189a": {}, // handleOps (örnek)
 	"24856bc3": {}, //execute
+
 }
 
 func IsSwapMethod(tx *types.Transaction) bool {

@@ -179,12 +179,14 @@ func main() {
 	}()
 
 	go func() {
+		return
 		if err := bscScanner.Start(bscCtx); err != nil {
 			log.Printf("bscScanner scanner error: %v", err)
 		}
 	}()
 
 	go func() {
+		//return
 		if err := avalancheScanner.Start(avaxCtx); err != nil {
 			log.Printf("Avalanche scanner error: %v", err)
 		}

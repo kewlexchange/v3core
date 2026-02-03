@@ -231,7 +231,7 @@ func (d *DexV2Fetcher) ExecuteSwap(chainId models.ChainID, params coreTypes.ArbR
 	flashContract := constants.FlashContractMap[models.ChainID(chainId)]
 	privateKeyHex := os.Getenv("PRIVATE_KEY")
 	if privateKeyHex == "" {
-		fmt.Println("PRIVATE_KEY env variable is not set")
+		log.Println("PRIVATE_KEY env variable is not set")
 		return fmt.Errorf("Invalid Private Key")
 	}
 
@@ -239,13 +239,13 @@ func (d *DexV2Fetcher) ExecuteSwap(chainId models.ChainID, params coreTypes.ArbR
 
 	flashSwap, err := flash.NewFlash(flashContract, evmClient)
 	if err != nil {
-		fmt.Println("Err1", err)
+		log.Println("Err1", err)
 		return err
 	}
 
 	privateKey, err := crypto.HexToECDSA(strings.TrimPrefix(privateKeyHex, "0x"))
 	if err != nil {
-		fmt.Println("Err2", err)
+		log.Println("Err2", err)
 		return err
 	}
 
@@ -255,7 +255,7 @@ func (d *DexV2Fetcher) ExecuteSwap(chainId models.ChainID, params coreTypes.ArbR
 
 	nonce, err := evmClient.PendingNonceAt(context.Background(), from)
 	if err != nil {
-		fmt.Println("Err3", err)
+		log.Println("Err3", err)
 
 		return err
 	}
@@ -290,7 +290,7 @@ func (d *DexV2Fetcher) ExecuteSwap(chainId models.ChainID, params coreTypes.ArbR
 	}
 
 	if !tryLockFlash(flashParams) {
-		fmt.Println("Daha once islendi...")
+		log.Println("Daha once islendi...")
 		return nil
 	}
 	defer unlockFlash(flashParams)
@@ -299,12 +299,12 @@ func (d *DexV2Fetcher) ExecuteSwap(chainId models.ChainID, params coreTypes.ArbR
 
 	tx, err := flashSwap.HandleSwap(auth, flashParams)
 	if err != nil {
-		fmt.Println("Coder5", err)
+		log.Println("Coder5", err)
 
 		return err
 	}
 
-	fmt.Println("Flash TX:", tx.Hash().Hex())
+	log.Println("Flash TX:", tx.Hash().Hex())
 	return nil
 
 	//flashSwap.HandleFlash()
@@ -318,7 +318,7 @@ func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes
 	flashContract := constants.FlashContractMap[models.ChainID(chainId)]
 	privateKeyHex := os.Getenv("PRIVATE_KEY")
 	if privateKeyHex == "" {
-		fmt.Println("PRIVATE_KEY env variable is not set")
+		log.Println("PRIVATE_KEY env variable is not set")
 		return fmt.Errorf("Invalid Private Key")
 	}
 
@@ -326,13 +326,13 @@ func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes
 
 	flashSwap, err := flash.NewFlash(flashContract, evmClient)
 	if err != nil {
-		fmt.Println("Err1", err)
+		log.Println("Err1", err)
 		return err
 	}
 
 	privateKey, err := crypto.HexToECDSA(strings.TrimPrefix(privateKeyHex, "0x"))
 	if err != nil {
-		fmt.Println("Err2", err)
+		log.Println("Err2", err)
 		return err
 	}
 
@@ -342,7 +342,7 @@ func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes
 
 	nonce, err := evmClient.PendingNonceAt(context.Background(), from)
 	if err != nil {
-		fmt.Println("Err3", err)
+		log.Println("Err3", err)
 
 		return err
 	}
@@ -383,18 +383,18 @@ func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes
 	}
 
 	if totalProfit.Cmp(constants.MIN_PROFIT[chainId]) <= 0 {
-		fmt.Println("LESS PROFIT", chainId, utils.FormatUnits(totalProfit, big.NewInt(18)))
+		log.Println("LESS PROFIT", chainId, utils.FormatUnits(totalProfit, big.NewInt(18)))
 		return errors.New("MIN PROFIT")
 	}
 
 	estimateAuth := *auth
 	estimateAuth.NoSend = true
 
-	fmt.Println("TOTAL PROFIT", utils.FormatUnits(totalProfit, big.NewInt(18)), "ISLEM", len(allSwapParams), "CHAIN", chainId)
+	log.Println("TOTAL PROFIT", utils.FormatUnits(totalProfit, big.NewInt(18)), "ISLEM", len(allSwapParams), "CHAIN", chainId)
 
 	txPreview, err := flashSwap.HandleSwapEx(&estimateAuth, allSwapParams)
 	if err != nil {
-		fmt.Println("Preview error:", err)
+		log.Println("Preview error:", err)
 		return err
 	}
 	msg := ethereum.CallMsg{
@@ -405,7 +405,7 @@ func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes
 
 	estimatedGas, err := evmClient.EstimateGas(context.Background(), msg)
 	if err != nil {
-		fmt.Println("EstimateGas failed:", err)
+		log.Println("EstimateGas failed:", err)
 		return err
 	}
 
@@ -435,15 +435,15 @@ func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes
 		predictedGasPrice,
 	)
 
-	fmt.Println("TOTAL PROFIT", utils.FormatUnits(totalProfit, big.NewInt(18)), "GAS : ", utils.FormatUnits(predictedCost, big.NewInt(18)), "ISLEM", len(allSwapParams), "CHAIN", chainId)
+	log.Println("TOTAL PROFIT", utils.FormatUnits(totalProfit, big.NewInt(18)), "GAS : ", utils.FormatUnits(predictedCost, big.NewInt(18)), "ISLEM", len(allSwapParams), "CHAIN", chainId)
 
 	defaultGas := constants.FEE_MAP[chainId]
 	if totalProfit.Cmp(&defaultGas) <= 0 {
-		fmt.Println("❌ Not profitable after gas")
+		log.Println("❌ Not profitable after gas")
 		return nil
 	}
 
-	fmt.Println("✅ ✅ ✅ ✅ ✅ ✅ FOUND FOUND FOUND FOUND FOUND FOUND FOUND FOUND")
+	log.Println("✅ ✅ ✅ ✅ ✅ ✅ FOUND FOUND FOUND FOUND FOUND FOUND FOUND FOUND")
 
 	auth.GasLimit = gasLimit
 	auth.GasFeeCap = predictedGasPrice
@@ -451,29 +451,29 @@ func (d *DexV2Fetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes
 
 	tx, err := flashSwap.HandleSwapEx(auth, allSwapParams)
 	if err != nil {
-		fmt.Println("HandleSwapEx", err)
+		log.Println("HandleSwapEx", err)
 
 		return err
 	}
 
-	fmt.Println("Tx sent:", chainId, tx.Hash().Hex())
+	log.Println("Tx sent:", chainId, tx.Hash().Hex())
 
 	// ⏳ confirm bekle
 	receipt, err := bind.WaitMined(context.Background(), evmClient, tx)
 	if err != nil {
-		fmt.Println("WaitMined error:", err)
+		log.Println("WaitMined error:", err)
 		return err
 	}
 
 	if receipt.Status == types.ReceiptStatusFailed {
-		fmt.Println("❌ Tx reverted")
+		log.Println("❌ Tx reverted")
 		return fmt.Errorf("transaction reverted")
 	}
 
-	fmt.Println("✅ Tx confirmed")
-	fmt.Println("Gas used:", receipt.GasUsed)
+	log.Println("✅ Tx confirmed")
+	log.Println("Gas used:", receipt.GasUsed)
 
-	fmt.Println("Flash TX:", tx.Hash().Hex())
+	log.Println("Flash TX:", tx.Hash().Hex())
 	return nil
 }
 
@@ -490,7 +490,7 @@ func (d *DexV2Fetcher) FetchCycle(chainId models.ChainID, params models.Cycle) (
 	}
 	pairs, pairErr := d.FetchReserves(chainId, pairs)
 	if pairErr != nil {
-		fmt.Println("FetchCycle, FetchReserves error")
+		log.Println("FetchCycle, FetchReserves error")
 		return params, pairErr
 	}
 

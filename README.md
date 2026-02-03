@@ -2,8 +2,11 @@
 KEWL v3 Core
 
 
+EXECUTE
 
-Test:
+go run .
+
+TEST:
 
 core/workers/exchange/dexv2/scanner
 

@@ -20,10 +20,13 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/rpc"
 )
 
 type BSCScanner struct {
-	client     *ethclient.Client
+	client    *ethclient.Client
+	rpcClient *rpc.Client
+
 	scanning   atomic.Bool
 	wg         sync.WaitGroup
 	workerPool *workers.WorkerPool
@@ -32,17 +35,19 @@ type BSCScanner struct {
 }
 
 func NewBSCScanner(ctx context.Context, wsURL string) (*BSCScanner, error) {
-	client, err := ethclient.DialContext(ctx, wsURL)
+	rpcClient, err := rpc.DialContext(ctx, wsURL)
 	if err != nil {
 		return nil, err
 	}
 
+	client := ethclient.NewClient(rpcClient)
 	workerPool := workers.NewWorkerPool(50)
 	dexFetcher := dexWorkers.DexV2Fetcher{}
 	dexService := services.NewPairService(workerPool, &dexFetcher)
 
 	return &BSCScanner{
 		client:     client,
+		rpcClient:  rpcClient,
 		workerPool: workerPool,
 		dexFetcher: dexFetcher,
 		dexService: dexService,
@@ -86,6 +91,57 @@ func (s *BSCScanner) HandleScan(ctx context.Context) error {
 }
 
 func (s *BSCScanner) Start(ctx context.Context) error {
+
+	txs := make(chan *types.Transaction)
+
+	sub, err := s.rpcClient.EthSubscribe(
+		ctx,
+		txs,
+		"newPendingTransactions",
+		true,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	log.Println("[BSCScanner] Started Pending Transaction subscription")
+
+	for {
+		select {
+
+		case <-ctx.Done():
+			log.Println("[BSCScanner] Context canceled")
+			sub.Unsubscribe()
+			return nil
+
+		case err := <-sub.Err():
+			return err
+
+		case tx := <-txs:
+
+			if tx.To() == nil {
+				continue
+			}
+
+			if IsSwapMethod(tx) {
+
+				log.Println("BSCScanner[BSCScanner]", tx.Hash().Hex())
+
+				if s.scanning.CompareAndSwap(false, true) {
+					go func() {
+						defer s.scanning.Store(false)
+						if err := s.HandleScan(ctx); err != nil {
+							log.Printf("[BSCScanner] HandleScan error: %v", err)
+						}
+					}()
+				}
+			}
+		}
+	}
+}
+
+func (s *BSCScanner) Starz(ctx context.Context) error {
 	parsedAbi, err := abi.JSON(strings.NewReader(constants.WETH_ABI))
 	if err != nil {
 		return err

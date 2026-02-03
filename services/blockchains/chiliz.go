@@ -21,10 +21,13 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/rpc"
 )
 
 type ChilizScanner struct {
-	client     *ethclient.Client
+	client    *ethclient.Client
+	rpcClient *rpc.Client
+
 	scanning   atomic.Bool
 	wg         sync.WaitGroup
 	workerPool *workers.WorkerPool
@@ -33,10 +36,12 @@ type ChilizScanner struct {
 }
 
 func NewChilizScanner(ctx context.Context, wsURL string) (*ChilizScanner, error) {
-	client, err := ethclient.DialContext(ctx, wsURL)
+	rpcClient, err := rpc.DialContext(ctx, wsURL)
 	if err != nil {
 		return nil, err
 	}
+
+	client := ethclient.NewClient(rpcClient)
 
 	workerPool := workers.NewWorkerPool(50)
 	dexFetcher := dexWorkers.DexV2Fetcher{}
@@ -44,6 +49,7 @@ func NewChilizScanner(ctx context.Context, wsURL string) (*ChilizScanner, error)
 
 	return &ChilizScanner{
 		client:     client,
+		rpcClient:  rpcClient,
 		workerPool: workerPool,
 		dexFetcher: dexFetcher,
 		dexService: dexService,
@@ -63,7 +69,7 @@ func (s *ChilizScanner) HandleScan(ctx context.Context) error {
 	return nil
 }
 
-func (s *ChilizScanner) Start(ctx context.Context) error {
+func (s *ChilizScanner) StartX(ctx context.Context) error {
 	parsedAbi, err := abi.JSON(strings.NewReader(constants.WETH_ABI))
 	if err != nil {
 		return err
@@ -132,60 +138,58 @@ func (s *ChilizScanner) Start(ctx context.Context) error {
 	}
 }
 
-func (s *ChilizScanner) StartEx(ctx context.Context) error {
-	headers := make(chan *types.Header)
-	sub, err := s.client.SubscribeNewHead(ctx, headers)
+func (s *ChilizScanner) Start(ctx context.Context) error {
+
+	txs := make(chan *types.Transaction)
+
+	sub, err := s.rpcClient.EthSubscribe(
+		ctx,
+		txs,
+		"newPendingTransactions",
+		true,
+	)
+
 	if err != nil {
+		log.Println("ERR", err)
 		return err
 	}
-	log.Println("[ChilizScanner] Started")
+
+	log.Println("[ChilizScanner] Started Pending Transaction subscription")
 
 	for {
 		select {
+
 		case <-ctx.Done():
 			log.Println("[ChilizScanner] Context canceled")
+			sub.Unsubscribe()
 			return nil
+
 		case err := <-sub.Err():
 			return err
-		case header := <-headers:
-			log.Printf("[ChilizScanner] New block: %d\n", header.Number.Uint64())
-			block, err := s.client.BlockByHash(ctx, header.Hash())
-			if err != nil {
-				log.Printf("[ChilizScanner] Failed to fetch block: %v\n", err)
+
+		case tx := <-txs:
+
+			if tx.To() == nil {
 				continue
 			}
 
-			var foundSwap atomic.Bool
-			s.wg = sync.WaitGroup{}
+			//if tx.To().Hex() == constants.WETH_MAP[constants.ChilizChainId][0].Hex() {
 
-			for _, tx := range block.Transactions() {
-				if tx.To() == nil {
-					continue
-				}
-				s.wg.Add(1)
-				go func(tx *types.Transaction) {
-					defer s.wg.Done()
-					if IsSwapMethod(tx) {
-						log.Printf("[ChilizScanner] Swap detected: %s\n", tx.Hash().Hex())
-						foundSwap.Store(true)
+			//}
+
+			//if IsSwapMethod(tx) {
+
+			log.Println("PendingTxHashSwap[ChilizScanner]", tx.Hash())
+
+			if s.scanning.CompareAndSwap(false, true) {
+				go func() {
+					defer s.scanning.Store(false)
+					if err := s.HandleScan(ctx); err != nil {
+						log.Printf("[ChilizScanner] HandleScan error: %v", err)
 					}
-				}(tx)
+				}()
 			}
-
-			s.wg.Wait()
-
-			if foundSwap.Load() {
-				if s.scanning.CompareAndSwap(false, true) {
-					go func() {
-						defer s.scanning.Store(false)
-						if err := s.HandleScan(ctx); err != nil {
-							log.Printf("[StartCHZ] HandleScanCHZ error: %v\n", err)
-						}
-					}()
-				} else {
-					log.Println("[StartCHZ] HandleScanCHZ already running, skipping")
-				}
-			}
+			//}
 		}
 	}
 }

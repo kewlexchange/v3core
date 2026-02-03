@@ -122,5 +122,5 @@ var FEE_MAP = map[models.ChainID]big.Int{
 var MIN_PROFIT = map[models.ChainID]*big.Int{
 	models.Chiliz:    big.NewInt(1000000000000000000),
 	models.Avalanche: big.NewInt(500000000000000),
-	models.BSC:       big.NewInt(500000000000000),
+	models.BSC:       big.NewInt(20000000000000),
 }

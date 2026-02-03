@@ -20,10 +20,12 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/rpc"
 )
 
 type AvalancheScanner struct {
 	client     *ethclient.Client
+	rpcClient  *rpc.Client
 	scanning   atomic.Bool
 	wg         sync.WaitGroup
 	workerPool *workers.WorkerPool
@@ -32,17 +34,19 @@ type AvalancheScanner struct {
 }
 
 func NewAvalancheScanner(ctx context.Context, wsURL string) (*AvalancheScanner, error) {
-	client, err := ethclient.DialContext(ctx, wsURL)
+	rpcClient, err := rpc.DialContext(ctx, wsURL)
 	if err != nil {
 		return nil, err
 	}
 
+	client := ethclient.NewClient(rpcClient)
 	workerPool := workers.NewWorkerPool(50)
 	dexFetcher := dexWorkers.DexV2Fetcher{}
 	dexService := services.NewPairService(workerPool, &dexFetcher)
 
 	return &AvalancheScanner{
 		client:     client,
+		rpcClient:  rpcClient,
 		workerPool: workerPool,
 		dexFetcher: dexFetcher,
 		dexService: dexService,
@@ -85,7 +89,7 @@ func (s *AvalancheScanner) HandleScan(ctx context.Context) error {
 	return nil
 }
 
-func (s *AvalancheScanner) Start(ctx context.Context) error {
+func (s *AvalancheScanner) StartX(ctx context.Context) error {
 	parsedAbi, err := abi.JSON(strings.NewReader(constants.WETH_ABI))
 	if err != nil {
 		return err
@@ -152,34 +156,52 @@ func (s *AvalancheScanner) Start(ctx context.Context) error {
 	}
 }
 
-func (s *AvalancheScanner) StartEx(ctx context.Context) error {
-	headers := make(chan *types.Header)
-	sub, err := s.client.SubscribeNewHead(ctx, headers)
+func (s *AvalancheScanner) Start(ctx context.Context) error {
+
+	txs := make(chan *types.Transaction)
+
+	sub, err := s.rpcClient.EthSubscribe(
+		ctx,
+		txs,
+		"newPendingTransactions",
+		true,
+	)
+
 	if err != nil {
 		return err
 	}
-	log.Println("[AvalancheScanner] Started")
+
+	log.Println("[AvalancheScanner] Started Pending Transaction subscription")
 
 	for {
 		select {
+
 		case <-ctx.Done():
 			log.Println("[AvalancheScanner] Context canceled")
+			sub.Unsubscribe()
 			return nil
+
 		case err := <-sub.Err():
 			return err
-		case header := <-headers:
 
-			log.Printf("[AvalancheScanner] New block: %d\n", header.Number.Uint64())
+		case tx := <-txs:
 
-			if s.scanning.CompareAndSwap(false, true) {
-				go func() {
-					defer s.scanning.Store(false)
-					if err := s.HandleScan(ctx); err != nil {
-						log.Printf("[HandleScan] AVALANCHE error: %v\n", err)
-					}
-				}()
-			} else {
-				log.Println("[HandleScan] AVALANCHE already running, skipping")
+			if tx.To() == nil {
+				continue
+			}
+
+			if IsSwapMethod(tx) {
+
+				log.Println("PendingTxHashSwap[AvalancheScanner]", tx.Hash().Hex())
+
+				if s.scanning.CompareAndSwap(false, true) {
+					go func() {
+						defer s.scanning.Store(false)
+						if err := s.HandleScan(ctx); err != nil {
+							log.Printf("[AvalancheScanner] HandleScan error: %v", err)
+						}
+					}()
+				}
 			}
 		}
 	}
