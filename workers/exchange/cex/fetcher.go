@@ -2,6 +2,7 @@ package cex
 
 import (
 	"core/models"
+	coreTypes "core/types"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -71,4 +72,57 @@ func (c *CexFetcher) FetchPairs(exchange models.Exchange) ([]models.TradingPair,
 
 	log.Printf("[CEX] %s → %d pairs fetched", exchange.Name, len(pairs))
 	return pairs, nil
+}
+
+func (c *CexFetcher) FetchReserves(chainId models.ChainID, pairs []models.TradingPair) ([]models.TradingPair, error) {
+	return nil, nil
+}
+
+func (c *CexFetcher) ExecuteSwap(chainId models.ChainID, params coreTypes.ArbResult) error {
+
+	return nil
+}
+
+func (c *CexFetcher) ExecuteSwapAll(chainId models.ChainID, params []coreTypes.ArbResult) error {
+	return nil
+}
+
+func (c *CexFetcher) FetchCycle(chainId models.ChainID, params models.Cycle) (models.Cycle, error) {
+	return models.Cycle{}, nil
+}
+
+func (c *CexFetcher) FetchBalances() (map[string]float64, error) {
+	return nil, nil
+}
+
+func (c *CexFetcher) FetchBalance(symbol string) (float64, error) {
+	return 0, nil
+}
+
+func (c *CexFetcher) CreateMarketBuyOrder(symbol string, amount float64) (string, error) {
+	return "", nil
+
+}
+func (c *CexFetcher) CreateLimitBuyOrder(symbol string, amount float64, price float64) (string, error) {
+	return "", nil
+}
+
+func (c *CexFetcher) CreateMarketSellOrder(symbol string, amount float64) (string, error) {
+	return "", nil
+}
+
+func (c *CexFetcher) CreateLimitSellOrder(symbol string, amount float64, price float64) (string, error) {
+	return "", nil
+}
+
+func (c *CexFetcher) CancelOrder(id string) error {
+	return nil
+}
+
+func (c *CexFetcher) CancelAllOrders() error {
+	return nil
+}
+
+func (c *CexFetcher) CancelOrders(ids []string) error {
+	return nil
 }

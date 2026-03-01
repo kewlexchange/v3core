@@ -30,6 +30,10 @@ func NewPairService(pool *workers.WorkerPool, fetcher exchange.PairFetcher) *Pai
 	}
 }
 
+func (s *PairService) Name() string {
+	return "PairService"
+}
+
 func addPairToAsset(assetList *[]models.Asset, currency models.Currency, p *models.TradingPair) {
 	for i := range *assetList {
 		if (*assetList)[i].Currency.Contract.Hex() == currency.Contract.Hex() {

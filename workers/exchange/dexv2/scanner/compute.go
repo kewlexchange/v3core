@@ -286,8 +286,6 @@ func FlashSearch(chainId models.ChainID, scan models.ScanParams, tradingPairs []
 		res.Exists = true
 	}
 
-	log.Println("HERE")
-
 	//res.Exists = false
 	return &res
 

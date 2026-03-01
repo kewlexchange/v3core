@@ -1,16 +1,23 @@
 package main
 
 import (
+	ccxt "github.com/ccxt/ccxt/go/v4"
+
 	"context"
 	"core/constants"
+	"core/models"
 	"core/services"
-	blockchains "core/services/blockchains"
 	"core/workers"
+
+	blockchains "core/services/blockchains"
+
+	cexWorkers "core/workers/exchange/cex"
+
 	dexWorkers "core/workers/exchange/dexv2"
+
 	dexScanner "core/workers/exchange/dexv2/scanner"
 	"core/workers/exchange/dexv2/scanner/chiliz"
 	"fmt"
-
 	"log"
 	"os"
 	"os/signal"
@@ -141,13 +148,117 @@ func main() {
 		log.Println("Error loading .env file")
 	}
 
-	//handleFetchCycles()
-	//return
-
 	mainCtx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// Chiliz için ayrı context
+	testnetBinanceAPIKey := os.Getenv("BINANCE_TESTNET_API_KEY")
+	testnetBinanceSecretKey := os.Getenv("BINANCE_TESTNET_SECRET_KEY")
+	client := ccxt.NewBinance(map[string]interface{}{
+		"enableRateLimit": true,
+		"apiKey":          testnetBinanceAPIKey,
+		"secret":          testnetBinanceSecretKey,
+		"options": map[string]interface{}{
+			"defaultType": "future", // spot
+		},
+	})
+	client.EnableDemoTrading(true)
+
+	pool := workers.NewWorkerPool(32)
+	fetcher := cexWorkers.NewCexFetcher(client)
+	service := services.NewPairService(pool, fetcher)
+	fmt.Println("Service", service.Name())
+
+	futuresBalance, err := client.FetchBalance()
+	if err != nil {
+		log.Fatalf("fetch balance hata: %v", err)
+	}
+
+	usdcBalance, exists := futuresBalance.Balances["USDC"]
+	if !exists {
+		log.Println("USDC bakiyesi bulunamadi veya 0.")
+	} else {
+		fmt.Printf("USDC TOTAL Balance: %f\n", *usdcBalance.Total)
+		fmt.Printf("USDC USED Balance:  %f\n", *usdcBalance.Used)
+		fmt.Printf("USDC FREE Balance:  %f\n", *usdcBalance.Free)
+	}
+
+	symbol := "BTC/USDT:USDT"
+
+	leverage := int64(10)
+
+	fmt.Printf("%s paritesi icin kaldirac : %d ayarlaniyor.\n", symbol, leverage)
+
+	response, err := client.SetLeverage(
+		leverage,
+		ccxt.WithSetLeverageSymbol(symbol),
+	)
+	if err != nil {
+		log.Fatalf("kaldirac ayarlanirken hata olustu: %v", err)
+	}
+	fmt.Println("kaldirac ayarlandi...", response)
+
+	amount := 0.01
+	price := 65793.1
+
+	order, err := client.CreateOrder(symbol, "market", "buy", amount)
+
+	if err != nil {
+		log.Fatalf("emir olusturulamadi: %v", err)
+	}
+
+	if order.Id != nil {
+		fmt.Printf("order yaratildi! OrderId: %s\n", *order.Id)
+	}
+
+	fmt.Printf("%s paritesinde %f fiyatından limitlong emri giriliyor...\n", symbol, price)
+
+	longLimitOrder, err := client.CreateOrder(
+		symbol,
+		"limit",
+		"buy",
+		amount,
+		ccxt.WithCreateOrderPrice(price),
+	)
+
+	if err != nil {
+		log.Fatalf("Long emir basarisiz: %v", err)
+	}
+
+	if longLimitOrder.Id != nil {
+		fmt.Printf("Long emiri gonderildi ! Order ID: %s --- STATUS:%s\n", *longLimitOrder.Id, *longLimitOrder.Status)
+	}
+
+	orderId := *longLimitOrder.Id
+
+	fmt.Printf("%s ID'li %s emri iptal ediliyor...\n", orderId, symbol)
+
+	cancelResult, err := client.CancelOrder(
+		orderId,
+		ccxt.WithCancelOrderSymbol(symbol),
+	)
+
+	if err != nil {
+		log.Printf("Emir iptal edilirken hata olustu: %v", err)
+	}
+
+	fmt.Printf("Emir iptal edildi! Durum: %v\n", cancelResult.Status)
+
+	/*
+		fmt.Printf("%s paritesindeki tüm açık emirler iptal ediliyor...\n", symbol)
+
+		// CancelAllOrders varsayılan olarak opsiyonel parametreler alır
+		_, err := client.CancelAllOrders(
+			ccxt.WithCancelAllOrdersSymbol(symbol),
+		)
+
+		if err != nil {
+			log.Fatalf("Tüm emirler iptal edilirken hata: %v", err)
+		}
+
+		fmt.Println("Paritedeki tüm açık emirler temizlendi!")
+	*/
+
+	return
 	chilizCtx, chilizCancel := context.WithCancel(mainCtx)
 	defer chilizCancel()
 
@@ -156,7 +267,6 @@ func main() {
 		log.Printf("Failed to create Chiliz scanner: %v", err)
 	}
 
-	// Avalanche için ayrı context
 	avaxCtx, avaxCancel := context.WithCancel(mainCtx)
 	defer avaxCancel()
 
@@ -179,29 +289,17 @@ func main() {
 	}()
 
 	go func() {
-		return
 		if err := bscScanner.Start(bscCtx); err != nil {
 			log.Printf("bscScanner scanner error: %v", err)
 		}
 	}()
 
 	go func() {
-		//return
 		if err := avalancheScanner.Start(avaxCtx); err != nil {
 			log.Printf("Avalanche scanner error: %v", err)
 		}
 	}()
-	/*
 
-
-		go func() {
-			if err := bscScanner.Start(bscCtx); err != nil {
-				log.Printf("bscScanner scanner error: %v", err)
-			}
-		}()
-	*/
-
-	// OS sinyalleri yakala (Ctrl+C vs) graceful shutdown için
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 	<-c
@@ -220,60 +318,56 @@ func main() {
 
 	//dexService.FetchPairsConcurrent(constants.DEXExchanges)
 
-	/*
+	// CEX exchanges
+	cexExchanges := []models.Exchange{
+		{Name: "BINANCE", Kind: models.ExchangeKindCEX},
+	}
 
-	   	// CEX exchanges
-	   	cexExchanges := []models.Exchange{
-	   		{Name: "BINANCE", Kind: models.ExchangeKindCEX},
-	   		{Name: "BTCTURK", Kind: models.ExchangeKindCEX},
-	   		{Name: "OKX", Kind: models.ExchangeKindCEX},
-	   		{Name: "MEXC", Kind: models.ExchangeKindCEX},
-	   	}
-	   	for _, ex := range cexExchanges {
+	for _, ex := range cexExchanges {
 
-	   		switch ex.Name {
+		switch ex.Name {
 
-	   		case "BINANCE":
+		case "BINANCE":
 
-	   			client := ccxt.NewBinance(map[string]interface{}{
-	   				"enableRateLimit": true,
-	   			})
-	   			fetcher := cexWorkers.NewCexFetcher(client) // POINTER gerekmez
-	   			service := services.NewPairService(pool, fetcher)
-	   			service.FetchPairsConcurrent([]models.Exchange{ex})
+			client := ccxt.NewBinance(map[string]interface{}{
+				"enableRateLimit": true,
+			})
+			fetcher := cexWorkers.NewCexFetcher(client) // POINTER gerekmez
+			service := services.NewPairService(pool, fetcher)
+			service.FetchPairsConcurrent([]models.Exchange{ex})
 
-	   		case "MEXC":
+		case "MEXC":
 
-	   			client := ccxt.NewMexc(map[string]interface{}{
-	   				"enableRateLimit": true,
-	   			})
-	   			fetcher := cexWorkers.NewCexFetcher(client) // POINTER gerekmez
-	   			service := services.NewPairService(pool, fetcher)
-	   			service.FetchPairsConcurrent([]models.Exchange{ex})
+			client := ccxt.NewMexc(map[string]interface{}{
+				"enableRateLimit": true,
+			})
+			fetcher := cexWorkers.NewCexFetcher(client) // POINTER gerekmez
+			service := services.NewPairService(pool, fetcher)
+			service.FetchPairsConcurrent([]models.Exchange{ex})
 
-	   		case "OKX":
+		case "OKX":
 
-	   			client := ccxt.NewOkx(map[string]interface{}{
-	   				"enableRateLimit": true,
-	   			})
-	   			fetcher := cexWorkers.NewCexFetcher(client) // POINTER gerekmez
-	   			service := services.NewPairService(pool, fetcher)
-	   			service.FetchPairsConcurrent([]models.Exchange{ex})
-	   		case "BTCTURK":
-	   			client := ccxt.NewBtcturk(map[string]interface{}{
-	   				"enableRateLimit": true,
-	   			})
+			client := ccxt.NewOkx(map[string]interface{}{
+				"enableRateLimit": true,
+			})
+			fetcher := cexWorkers.NewCexFetcher(client) // POINTER gerekmez
+			service := services.NewPairService(pool, fetcher)
+			service.FetchPairsConcurrent([]models.Exchange{ex})
+		case "BTCTURK":
+			client := ccxt.NewBtcturk(map[string]interface{}{
+				"enableRateLimit": true,
+			})
 
-	   			fetcher := cexWorkers.NewCexFetcher(client)
-	   			service := services.NewPairService(pool, fetcher)
-	   			service.FetchPairsConcurrent([]db.Exchange{ex})
+			fetcher := cexWorkers.NewCexFetcher(client)
+			service := services.NewPairService(pool, fetcher)
+			service.FetchPairsConcurrent([]models.Exchange{ex})
 
-	   		case "Paribu":
-	   			println("[WARN] Paribu CCXT desteklemiyor, skip ediliyor.")
-	   			// TODO: ParibuFetcher ekle
-	   		}
-	   	}
+		case "Paribu":
+			println("[WARN] Paribu CCXT desteklemiyor, skip ediliyor.")
+			// TODO: ParibuFetcher ekle
+		}
+	}
 
-	   pool.Wait()
-	*/
+	pool.Wait()
+
 }

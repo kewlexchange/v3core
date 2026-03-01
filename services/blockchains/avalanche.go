@@ -89,7 +89,7 @@ func (s *AvalancheScanner) HandleScan(ctx context.Context) error {
 	return nil
 }
 
-func (s *AvalancheScanner) StartX(ctx context.Context) error {
+func (s *AvalancheScanner) Start(ctx context.Context) error {
 	parsedAbi, err := abi.JSON(strings.NewReader(constants.WETH_ABI))
 	if err != nil {
 		return err
@@ -156,7 +156,7 @@ func (s *AvalancheScanner) StartX(ctx context.Context) error {
 	}
 }
 
-func (s *AvalancheScanner) Start(ctx context.Context) error {
+func (s *AvalancheScanner) StartOrj(ctx context.Context) error {
 
 	txs := make(chan *types.Transaction)
 
@@ -168,6 +168,7 @@ func (s *AvalancheScanner) Start(ctx context.Context) error {
 	)
 
 	if err != nil {
+		log.Println("Error", err)
 		return err
 	}
 
